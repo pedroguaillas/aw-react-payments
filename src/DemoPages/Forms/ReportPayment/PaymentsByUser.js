@@ -3,12 +3,17 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import { Row, Col, Card, CardBody, Table, Button } from 'reactstrap'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
+import FormPaymentModal from '../Payments/FormPaymentModal'
+
+import { months } from '../PaymentHelpers'
 
 class PaymentsByUser extends React.Component {
   state = {
     user: {},
     customers: [],
-    customer_id: 0
+    payments: [],
+    modal: false,
+    payment: {}
   }
 
   componentDidMount () {
@@ -30,11 +35,112 @@ class PaymentsByUser extends React.Component {
   }
 
   onPays = ruc => {
-    alert(ruc)
+    fetch('https://ats.auditwhole.com/customers/' + ruc + '/payments')
+      .then(response => response.json())
+      .then(res => {
+        let { customer, payments, year, month } = res
+        this.setState({
+          customer,
+          payments,
+          payment: {
+            ...this.state.payment,
+            cliente_auditwhole_ruc: ruc
+          },
+          year,
+          month
+        })
+      })
+  }
+
+  //Show modal
+  toggle = () => {
+    let { year, month, customer } = this.state
+    let payment = {
+      year,
+      month,
+      cliente_auditwhole_ruc: customer.ruc,
+      type: 'Efectivo',
+      amount: customer.amount
+    }
+    this.setState(state => ({ modal: !state.modal, payment }))
+  }
+
+  handleChange = e => {
+    this.setState({
+      payment: {
+        ...this.state.payment,
+        [e.target.name]: e.target.value
+      }
+    })
+  }
+
+  handleChangeNumber = e => {
+    let { value } = e.target
+    if (isNaN(value)) {
+      return
+    }
+    this.handleChange(e)
+  }
+
+  submit = () => {
+    if (this.validate()) {
+      // Simple POST request with a JSON body using fetch
+      let { payment } = this.state
+      const requestOptions = {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payment)
+      }
+      document.getElementById('btn-save').disabled = true
+      requestOptions.method = 'POST'
+
+      fetch('https://ats.auditwhole.com/payments', requestOptions)
+        .then(response => response.json())
+        .then(res => {
+          let { payments } = this.state
+          payments.unshift(res.payment)
+          let { month, year } = res.payment
+          if (month === 12) {
+            month = 1
+            year++
+          } else {
+            month++
+          }
+          this.setState({
+            modal: false,
+            payments,
+            year,
+            month
+          })
+          document.getElementById('btn-save').disabled = false
+        })
+        .catch(() => {
+          alert('Ya existe un cobro de ese mes')
+        })
+    }
+  }
+
+  validate = () => {
+    let { payment } = this.state
+
+    if (!(payment.amount > 0)) {
+      alert('El monto debe ser un número')
+      return
+    }
+
+    if (!(payment.voucher > 0)) {
+      alert('El comprobante debe ser un número')
+      return
+    }
+
+    return true
   }
 
   render () {
-    let { user, customers, customer_id } = this.state
+    let { user, customers, customer, payments, modal, payment } = this.state
+    const totalpayments = payments.reduce(
+      (sum, payment) => sum + Number(payment.amount),
+      0
+    )
 
     return (
       <Fragment>
@@ -58,7 +164,15 @@ class PaymentsByUser extends React.Component {
               <p>No existe pagos registrados</p>
             ) : (
               <Row>
-                <Col lg='6'>
+                <FormPaymentModal
+                  toggle={this.toggle}
+                  modal={modal}
+                  payment={payment}
+                  handleChange={this.handleChange}
+                  handleChangeNumber={this.handleChangeNumber}
+                  submit={this.submit}
+                />
+                <Col lg='8'>
                   <Card className='main-card mb-3'>
                     <CardBody>
                       <Table size='sm' bordered responsive>
@@ -78,6 +192,7 @@ class PaymentsByUser extends React.Component {
                               </th>
                               <th>
                                 <Button
+                                  color='success'
                                   onClick={e => this.onPays(customer.ruc)}
                                 >
                                   Pagos
@@ -86,6 +201,54 @@ class PaymentsByUser extends React.Component {
                             </tr>
                           ))}
                         </tbody>
+                      </Table>
+                    </CardBody>
+                  </Card>
+                </Col>
+                <Col lg='4'>
+                  <Card className='main-card'>
+                    <div className='card-header'>
+                      {`${
+                        customer === undefined ? 'Pagos' : customer.razonsocial
+                      }`}
+                      <div className='btn-actions-pane-right'>
+                        <div role='group' className='btn-group-sm btn-group'>
+                          <button
+                            onClick={e => this.toggle()}
+                            className='btn btn-primary'
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <CardBody>
+                      <Table size='sm' bordered responsive>
+                        <thead>
+                          <tr style={{ 'text-align': 'center' }}>
+                            <th>Mes</th>
+                            <th>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payments.map((payment, index) => (
+                            <tr key={index}>
+                              {/* -1 porque se refiere a la posicion del array */}
+                              <td>{months[payment.month - 1].description}</td>
+                              <td style={{ 'text-align': 'right' }}>
+                                {payment.amount}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <th>Total</th>
+                            <th style={{ 'text-align': 'right' }}>
+                              {totalpayments}
+                            </th>
+                          </tr>
+                        </tfoot>
                       </Table>
                     </CardBody>
                   </Card>

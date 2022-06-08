@@ -265,6 +265,7 @@ class Payments extends React.Component {
                               <tr key={index}>
                                 <td>{payment.atts.year}</td>
                                 <td>
+                                  {/* -1 porque se refiere a la posicion del array */}
                                   {
                                     months[Number(payment.atts.month) - 1]
                                       .description
