@@ -7,7 +7,7 @@ import FormPaymentModal from '../Payments/FormPaymentModal'
 
 import { months } from '../PaymentHelpers'
 
-class PaymentsByUser extends React.Component {
+class SmartPayment extends React.Component {
   state = {
     user: {},
     customers: [],
@@ -26,7 +26,10 @@ class PaymentsByUser extends React.Component {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ year: 2022, id: params.id })
     }
-    fetch('https://ats.auditwhole.com/listtablebyuser', requestOptions)
+    fetch(
+      'https://ats.auditwhole.com/user/' + params.id + '/customers',
+      requestOptions
+    )
       .then(response => response.json())
       .then(res => {
         let { user, customers } = res
@@ -96,8 +99,15 @@ class PaymentsByUser extends React.Component {
       fetch('https://ats.auditwhole.com/payments', requestOptions)
         .then(response => response.json())
         .then(res => {
-          let { payments } = this.state
+          let { payments, customers, customer } = this.state
           payments.unshift(res.payment)
+          let indexcustom = customers.findIndex(
+            item => item.ruc === customer.ruc
+          )
+          customers[indexcustom].total = payments.reduce(
+            (sum, payment) => sum + Number(payment.amount),
+            0
+          )
           let { month, year } = res.payment
           if (month === 12) {
             month = 1
@@ -107,6 +117,7 @@ class PaymentsByUser extends React.Component {
           }
           this.setState({
             modal: false,
+            customers,
             payments,
             year,
             month
@@ -147,7 +158,7 @@ class PaymentsByUser extends React.Component {
         <PageTitle
           heading='Cobros'
           subheading={user.name}
-          icon='pe-7s-wallet icon-gradient bg-premium-dark'
+          icon='pe-7s-cash icon-gradient bg-tempting-azure'
         />
         <TransitionGroup>
           <CSSTransition
@@ -178,24 +189,33 @@ class PaymentsByUser extends React.Component {
                       <Table size='sm' bordered responsive>
                         <thead>
                           <tr style={{ 'text-align': 'center' }}>
-                            <th>Razon social</th>
-                            <th>Total</th>
-                            <th></th>
+                            <th>RAZON SOCIAL</th>
+                            <th>TOTAL</th>
+                            <th style={{ width: '2em' }}></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {customers.map((customer, index) => (
-                            <tr key={index}>
-                              <td>{customer.razonsocial}</td>
-                              <th style={{ 'text-align': 'right' }}>
-                                {customer.total}
-                              </th>
+                          {customers.map((item, index) => (
+                            <tr
+                              key={index}
+                              className={
+                                customer !== undefined &&
+                                customer.ruc === item.ruc
+                                  ? 'table-active'
+                                  : null
+                              }
+                            >
+                              <td>{item.razonsocial}</td>
+                              <td style={{ 'text-align': 'right' }}>
+                                {item.total}
+                              </td>
                               <th>
                                 <Button
+                                  className='font-icon-sm pb-0 pt-1'
                                   color='success'
-                                  onClick={e => this.onPays(customer.ruc)}
+                                  onClick={e => this.onPays(item.ruc)}
                                 >
-                                  Pagos
+                                  <i className='pe-7s-cash'></i>
                                 </Button>
                               </th>
                             </tr>
@@ -211,16 +231,18 @@ class PaymentsByUser extends React.Component {
                       {`${
                         customer === undefined ? 'Pagos' : customer.razonsocial
                       }`}
-                      <div className='btn-actions-pane-right'>
-                        <div role='group' className='btn-group-sm btn-group'>
-                          <button
-                            onClick={e => this.toggle()}
-                            className='btn btn-primary'
-                          >
-                            +
-                          </button>
+                      {customer === undefined ? null : (
+                        <div className='btn-actions-pane-right'>
+                          <div role='group' className='btn-group-sm btn-group'>
+                            <button
+                              onClick={e => this.toggle()}
+                              className='btn btn-primary'
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                     <CardBody>
                       <Table size='sm' bordered responsive>
@@ -262,4 +284,4 @@ class PaymentsByUser extends React.Component {
   }
 }
 
-export default PaymentsByUser
+export default SmartPayment

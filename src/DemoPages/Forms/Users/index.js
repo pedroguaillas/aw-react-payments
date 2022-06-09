@@ -1,7 +1,19 @@
 import React, { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
-import { Row, Col, Card, CardBody, Table, Button } from 'reactstrap'
+import {
+  Row,
+  Col,
+  Card,
+  CardBody,
+  Table,
+  Button,
+  ButtonGroup,
+  CardHeader,
+  Form,
+  InputGroup,
+  Input
+} from 'reactstrap'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
@@ -29,12 +41,69 @@ class Users extends React.Component {
       })
   }
 
+  reqNewPage = async (e, page) => {
+    e.preventDefault()
+
+    if (page !== null) {
+      let { search, meta } = this.state
+      try {
+        // Simple POST request with a JSON body using fetch
+        const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ search })
+        }
+        fetch(
+          `${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`,
+          requestOptions
+        )
+          .then(response => response.json())
+          .then(res => {
+            let { data, links, meta } = res
+            this.setState({
+              users: data,
+              links,
+              meta
+            })
+          })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  onChangeSearch = async e => {
+    let { value } = e.target
+
+    try {
+      // Simple POST request with a JSON body using fetch
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ search: value })
+      }
+      fetch('https://ats.auditwhole.com/listusser', requestOptions)
+        .then(response => response.json())
+        .then(res => {
+          let { data, links, meta } = res
+          this.setState({
+            search: value,
+            users: data,
+            links,
+            meta
+          })
+        })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   toggle = () => {
     alert('Ases nates mas')
   }
 
   render () {
-    let { users, links, meta } = this.state
+    let { users, search, links, meta } = this.state
 
     return (
       <Fragment>
@@ -50,7 +119,7 @@ class Users extends React.Component {
           ]}
           heading='Asesores'
           subheading='Lista de asesores de la empresa'
-          icon='pe-7s-wallet icon-gradient bg-premium-dark'
+          icon='pe-7s-user icon-gradient bg-sunny-morning'
         />
         <TransitionGroup>
           <CSSTransition
@@ -62,75 +131,82 @@ class Users extends React.Component {
             exit={false}
           >
             <div>
-              {users === null ? (
-                <p>Cargando ...</p>
-              ) : users.length === 0 ? (
-                <p>No existe asesores registrados</p>
-              ) : (
-                <Row>
-                  <Col lg='12'>
-                    <Card className='main-card mb-3'>
-                      <CardBody>
-                        <Table striped size='sm' responsive>
-                          <thead>
-                            <tr>
-                              <th>Nombre</th>
-                              <th>User</th>
-                              <th>Rol</th>
-                              <th>Correo Electrónico</th>
-                              <th style={{ width: '7.2em' }}></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {users.map((user, index) => (
-                              <tr key={`Row${index}`}>
-                                <td>{user.atts.name}</td>
-                                <td>{user.atts.user}</td>
-                                <td>{user.atts.rol}</td>
-                                <td>{user.atts.email}</td>
-                                <td>
-                                  <Button
-                                    size='sm'
-                                    color='primary'
-                                    title='Editar'
-                                    className='mr-4'
-                                  >
-                                    <i className='nav-link-icon lnr-pencil'></i>
-                                  </Button>
-                                  <Button
-                                    className='ml-4'
-                                    size='sm'
-                                    color='danger'
-                                    title='Eliminar'
-                                  >
-                                    <i className='nav-link-icon lnr-trash'></i>
-                                  </Button>
-                                  <Link to={`/app/asesor/${user.id}/pagos`}>
-                                    <Button
-                                      className='ml-4'
-                                      size='sm'
-                                      color='success'
-                                      title='Pagos'
-                                    >
-                                      <i className='nav-link-icon lnr-chart-bars'></i>
-                                    </Button>
-                                  </Link>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
+              <Row>
+                <Col lg='12'>
+                  <Card className='main-card mb-3'>
+                    <CardHeader>
+                      <div className='btn-actions-pane-right'>
+                        <Form className='text-right'>
+                          <InputGroup size='sm'>
+                            <Input
+                              value={search}
+                              onChange={this.onChangeSearch}
+                              placeholder='Buscar'
+                              className='search-input'
+                            />
+                          </InputGroup>
+                        </Form>
+                      </div>
+                    </CardHeader>
+                    <CardBody>
+                      <Table striped size='sm' responsive>
+                        <thead>
+                          <tr style={{ 'text-align': 'center' }}>
+                            <th>ASESOR</th>
+                            <th>USUARIO</th>
+                            <th>ROL</th>
+                            <th>CORREO</th>
+                            <th style={{ width: '7.2em' }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {users.length > 0
+                            ? users.map((user, index) => (
+                                <tr key={`Row${index}`}>
+                                  <td>{user.atts.name}</td>
+                                  <td>{user.atts.user}</td>
+                                  <td>{user.atts.rol}</td>
+                                  <td>{user.atts.email}</td>
+                                  <td>
+                                    <ButtonGroup size='sm'>
+                                      <Button
+                                        color='primary'
+                                        title='Editar'
+                                        className='me-2'
+                                      >
+                                        <i className='nav-link-icon lnr-pencil'></i>
+                                      </Button>
+                                      <Button
+                                        color='danger'
+                                        title='Eliminar'
+                                        className='me-2'
+                                      >
+                                        <i className='nav-link-icon lnr-trash'></i>
+                                      </Button>
+                                      <Link
+                                        to={`/app/asesor/${user.id}/pagos`}
+                                        className='btn btn-success'
+                                        title='Lista de clientes con pagos'
+                                      >
+                                        <i className='nav-link-icon lnr-chart-bars'></i>
+                                      </Link>
+                                    </ButtonGroup>
+                                  </td>
+                                </tr>
+                              ))
+                            : null}
+                        </tbody>
+                      </Table>
 
-                        <Paginate
-                          links={links}
-                          meta={meta}
-                          reqNewPage={this.reqNewPage}
-                        />
-                      </CardBody>
-                    </Card>
-                  </Col>
-                </Row>
-              )}
+                      <Paginate
+                        links={links}
+                        meta={meta}
+                        reqNewPage={this.reqNewPage}
+                      />
+                    </CardBody>
+                  </Card>
+                </Col>
+              </Row>
             </div>
           </CSSTransition>
         </TransitionGroup>

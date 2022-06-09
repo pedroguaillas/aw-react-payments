@@ -10,15 +10,23 @@ import {
   Form,
   InputGroup,
   Input,
-  Button
+  Button,
+  CardHeader
 } from 'reactstrap'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
+import FormCustomModal from './FormCustomModal'
 
 class FormElementsControls extends React.Component {
   state = {
     customers: [],
-    search: ''
+    search: '',
+    links: null,
+    meta: null,
+    modal: false,
+    custom: {
+      user_id: 0
+    }
   }
 
   async componentDidMount () {
@@ -72,6 +80,37 @@ class FormElementsControls extends React.Component {
     }
   }
 
+  toggle = () => {
+    this.setState(state => ({ modal: !state.modal }))
+  }
+
+  selectUser = user_id => {
+    alert('Ya selecciona pero falta actualizar estado')
+    // this.setState({
+    //   custom: {
+    //     ...this.state.custom,
+    //     user_id
+    //   }
+    // })
+  }
+
+  handleChange = e => {
+    this.setState({
+      custom: {
+        ...this.state.custom,
+        [e.target.name]: e.target.value
+      }
+    })
+  }
+
+  handleChangeNumber = e => {
+    let { value } = e.target
+    if (isNaN(value)) {
+      return
+    }
+    this.handleChange(e)
+  }
+
   onChangeSearch = async e => {
     let { value } = e.target
 
@@ -102,8 +141,10 @@ class FormElementsControls extends React.Component {
     }
   }
 
+  submit = () => alert('Falta guardar')
+
   render () {
-    let { customers, search, links, meta } = this.state
+    let { customers, search, links, meta, modal, custom } = this.state
 
     return (
       <Fragment>
@@ -118,16 +159,34 @@ class FormElementsControls extends React.Component {
           >
             <div>
               <PageTitle
+                options={[
+                  {
+                    id: 'tooltip-add-product',
+                    action: this.toggle,
+                    icon: 'plus',
+                    msmTooltip: 'Registrar cobro',
+                    color: 'primary'
+                  }
+                ]}
                 heading='Clientes'
                 subheading='Registro de clientes.'
-                icon='pe-7s-users icon-gradient bg-premium-dark'
+                icon='pe-7s-users icon-gradient bg-sunny-morning'
+              />
+
+              <FormCustomModal
+                modal={modal}
+                custom={custom}
+                toggle={this.toggle}
+                selectUser={this.selectUser}
+                handleChange={this.handleChange}
+                handleChangeNumber={this.handleChangeNumber}
+                submit={this.submit}
               />
 
               <Row>
-                <Col lg='12' className='mb-4'>
-                  <Card>
-                    <div className='card-header'>
-                      Busqueda
+                <Col lg='12'>
+                  <Card className='main-card mb-3'>
+                    <CardHeader>
                       <div className='btn-actions-pane-right'>
                         <Form className='text-right'>
                           <InputGroup size='sm'>
@@ -140,61 +199,54 @@ class FormElementsControls extends React.Component {
                           </InputGroup>
                         </Form>
                       </div>
-                    </div>
+                    </CardHeader>
+                    <CardBody>
+                      <Table striped size='sm' responsive>
+                        <thead>
+                          <tr>
+                            <th style={{ width: '7em' }}>RUC</th>
+                            <th>RAZON SOCIAL</th>
+                            <th>AESESOR</th>
+                            <th>VALOR</th>
+                            <th style={{ width: '2em' }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {customers.length > 0
+                            ? customers.map((customer, index) => (
+                                <tr key={index}>
+                                  <td>{customer.ruc}</td>
+                                  <td>{customer.atts.razonsocial}</td>
+                                  <td style={{ 'text-transform': 'uppercase' }}>
+                                    {customer.atts.name}
+                                  </td>
+                                  <td>${customer.atts.amount}</td>
+                                  <td>
+                                    <Link to={'/app/cliente/' + customer.ruc}>
+                                      <Button
+                                        className='font-icon-sm pb-0 pt-1'
+                                        color='success'
+                                        onClick={e => this.onPays(customer.ruc)}
+                                      >
+                                        <i className='pe-7s-cash'></i>
+                                      </Button>
+                                    </Link>
+                                  </td>
+                                </tr>
+                              ))
+                            : null}
+                        </tbody>
+                      </Table>
+
+                      <Paginate
+                        links={links}
+                        meta={meta}
+                        reqNewPage={this.reqNewPage}
+                      />
+                    </CardBody>
                   </Card>
                 </Col>
               </Row>
-
-              {customers === null ? (
-                <p>Cargando ...</p>
-              ) : customers.length === 0 ? (
-                <p>No existe clientes registrados</p>
-              ) : (
-                <Row>
-                  <Col lg='12'>
-                    <Card className='main-card mb-3'>
-                      <CardBody>
-                        <Table striped size='sm' responsive>
-                          <thead>
-                            <tr>
-                              <th style={{ width: '7em' }}>RUC</th>
-                              <th>Razon social</th>
-                              <th>Asesor</th>
-                              <th>Valor</th>
-                              <th style={{ width: '1em' }}></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {customers.map((customer, index) => (
-                              <tr key={index}>
-                                <td>{customer.ruc}</td>
-                                <td>{customer.atts.razonsocial}</td>
-                                <td style={{ 'text-transform': 'uppercase' }}>
-                                  {customer.atts.name}
-                                </td>
-                                <td>${customer.atts.amount}</td>
-                                <td>
-                                  <Link to={'/app/cliente/' + customer.ruc}>
-                                    <Button size='sm' color='primary'>
-                                      <i className='nav-link-icon lnr-pencil'></i>
-                                    </Button>
-                                  </Link>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-
-                        <Paginate
-                          links={links}
-                          meta={meta}
-                          reqNewPage={this.reqNewPage}
-                        />
-                      </CardBody>
-                    </Card>
-                  </Col>
-                </Row>
-              )}
             </div>
           </CSSTransition>
         </TransitionGroup>

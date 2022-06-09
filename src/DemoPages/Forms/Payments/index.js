@@ -1,13 +1,21 @@
 import React, { Fragment } from 'react'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
-import { Row, Col, Card, CardBody, Table, Button } from 'reactstrap'
+import {
+  Row,
+  Col,
+  Card,
+  CardBody,
+  Table,
+  Button,
+  ButtonGroup
+} from 'reactstrap'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import DialogDelete from '../../Components/DialogDelete'
 import Paginate from '../../Components/Paginate/Index'
 
 import FormPaymentModal from './FormPaymentModal'
-import { months } from './../PaymentHelpers'
+import { months, types } from './../PaymentHelpers'
 
 class Payments extends React.Component {
   state = {
@@ -275,9 +283,9 @@ class Payments extends React.Component {
                                 <td className='text-center'>
                                   <div
                                     className={`badge bg-${
-                                      payment.atts.type === 'Efectivo'
-                                        ? 'success'
-                                        : 'info'
+                                      types.find(
+                                        type => type.code === payment.atts.type
+                                      ).color
                                     }`}
                                   >
                                     {payment.atts.type}
@@ -285,23 +293,25 @@ class Payments extends React.Component {
                                 </td>
                                 <td>#{payment.atts.voucher}</td>
                                 <td>
-                                  <Button
-                                    onClick={e => this.toogleEdit(payment)}
-                                    size='sm'
-                                    color='primary'
-                                    title='Editar'
-                                  >
-                                    <i className='nav-link-icon lnr-pencil'></i>
-                                  </Button>
-                                  <Button
-                                    onClick={e => this.toogleDelete(payment.id)}
-                                    className='ml-4'
-                                    size='sm'
-                                    color='danger'
-                                    title='Eliminar'
-                                  >
-                                    <i className='nav-link-icon lnr-trash'></i>
-                                  </Button>
+                                  <ButtonGroup size='sm'>
+                                    <Button
+                                      onClick={e => this.toogleEdit(payment)}
+                                      color='primary'
+                                      title='Editar'
+                                      className='me-2'
+                                    >
+                                      <i className='nav-link-icon lnr-pencil'></i>
+                                    </Button>
+                                    <Button
+                                      onClick={e =>
+                                        this.toogleDelete(payment.id)
+                                      }
+                                      color='danger'
+                                      title='Eliminar'
+                                    >
+                                      <i className='nav-link-icon lnr-trash'></i>
+                                    </Button>
+                                  </ButtonGroup>
                                 </td>
                               </tr>
                             ))}
