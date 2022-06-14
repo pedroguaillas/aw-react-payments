@@ -17,13 +17,16 @@ import {
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
+import FormUserModal from './FormUserModal'
 
 class Users extends React.Component {
   state = {
     users: [],
     search: '',
     links: null,
-    meta: null
+    meta: null,
+    user: {},
+    modal: false
   }
 
   componentDidMount () {
@@ -99,11 +102,11 @@ class Users extends React.Component {
   }
 
   toggle = () => {
-    alert('Ases nates mas')
+    this.setState(state => ({ modal: !state.modal }))
   }
 
   render () {
-    let { users, search, links, meta } = this.state
+    let { users, search, links, meta, modal, user } = this.state
 
     return (
       <Fragment>
@@ -131,6 +134,7 @@ class Users extends React.Component {
             exit={false}
           >
             <div>
+              <FormUserModal modal={modal} user={user} toggle={this.toggle} />
               <Row>
                 <Col lg='12'>
                   <Card className='main-card mb-3'>
@@ -154,9 +158,8 @@ class Users extends React.Component {
                           <tr style={{ 'text-align': 'center' }}>
                             <th>ASESOR</th>
                             <th>USUARIO</th>
-                            <th>ROL</th>
                             <th>CORREO</th>
-                            <th style={{ width: '7.2em' }}></th>
+                            <th style={{ width: '5.2em' }}></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -165,7 +168,6 @@ class Users extends React.Component {
                                 <tr key={`Row${index}`}>
                                   <td>{user.atts.name}</td>
                                   <td>{user.atts.user}</td>
-                                  <td>{user.atts.rol}</td>
                                   <td>{user.atts.email}</td>
                                   <td>
                                     <ButtonGroup size='sm'>
@@ -175,13 +177,6 @@ class Users extends React.Component {
                                         className='me-2'
                                       >
                                         <i className='nav-link-icon lnr-pencil'></i>
-                                      </Button>
-                                      <Button
-                                        color='danger'
-                                        title='Eliminar'
-                                        className='me-2'
-                                      >
-                                        <i className='nav-link-icon lnr-trash'></i>
                                       </Button>
                                       <Link
                                         to={`/app/asesor/${user.id}/pagos`}

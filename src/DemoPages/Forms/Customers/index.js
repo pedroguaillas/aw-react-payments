@@ -11,7 +11,8 @@ import {
   InputGroup,
   Input,
   Button,
-  CardHeader
+  CardHeader,
+  ButtonGroup
 } from 'reactstrap'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
@@ -26,7 +27,8 @@ class FormElementsControls extends React.Component {
     modal: false,
     custom: {
       user_id: 0
-    }
+    },
+    option: 'CREATE'
   }
 
   async componentDidMount () {
@@ -80,18 +82,56 @@ class FormElementsControls extends React.Component {
     }
   }
 
+  reloadPage = async () => {
+    let { current_page, path } = this.state.meta
+    if (current_page !== null) {
+      let { search } = this.state
+      try {
+        // Simple POST request with a JSON body using fetch
+        const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ search })
+        }
+        fetch(`${path}?page=${current_page}`, requestOptions)
+          .then(response => response.json())
+          .then(res => {
+            let { data, links, meta } = res
+            this.setState({
+              customers: data,
+              links,
+              meta
+            })
+          })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  newCustom = () => {
+    let custom = {
+      ruc: '',
+      razonsocial: '',
+      sri: '',
+      amount: '',
+      user_id: 0
+    }
+    let option = 'CREATE'
+    this.setState({ modal: true, custom, option })
+  }
+
   toggle = () => {
     this.setState(state => ({ modal: !state.modal }))
   }
 
   selectUser = user_id => {
-    alert('Ya selecciona pero falta actualizar estado')
-    // this.setState({
-    //   custom: {
-    //     ...this.state.custom,
-    //     user_id
-    //   }
-    // })
+    this.setState({
+      custom: {
+        ...this.state.custom,
+        user_id
+      }
+    })
   }
 
   handleChange = e => {
@@ -141,10 +181,106 @@ class FormElementsControls extends React.Component {
     }
   }
 
-  submit = () => alert('Falta guardar')
+  submit = () => {
+    if (this.validate()) {
+      // Simple POST request with a JSON body using fetch
+      let { custom, option } = this.state
+      const requestOptions = {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(custom)
+      }
+
+      if (option === 'CREATE') {
+        document.getElementById('btn-save').disabled = true
+        requestOptions.method = 'POST'
+
+        fetch('https://ats.auditwhole.com/customers', requestOptions)
+          .then(response => response.json())
+          .then(res => {
+            this.setState({ modal: false })
+            this.reloadPage()
+            document.getElementById('btn-save').disabled = false
+          })
+          .catch(() => {
+            alert('Ya existe un cliente con ese RUC')
+          })
+      } else {
+        document.getElementById('btn-save').disabled = true
+        requestOptions.method = 'PUT'
+
+        fetch(
+          'https://ats.auditwhole.com/customers/' +
+            this.state.custom.ruc +
+            '/update',
+          requestOptions
+        )
+          .then(response => response.json())
+          .then(res => {
+            this.setState({ modal: false })
+            this.reloadPage()
+            document.getElementById('btn-save').disabled = false
+          })
+          .catch(() => {
+            alert('Ya existe un cliente con ese RUC')
+          })
+      }
+    }
+  }
+
+  validate = () => {
+    let { ruc, razonsocial, sri, amount, user_id } = this.state.custom
+
+    if (
+      ruc === undefined ||
+      razonsocial === undefined ||
+      sri === undefined ||
+      amount === undefined
+    ) {
+      alert('Todos los campos son obligatorios')
+      return
+    }
+
+    if (ruc.length < 13) {
+      alert('El RUC debe tener 13 dígitos')
+      return
+    }
+
+    if (razonsocial.length < 3) {
+      alert('La razón social debe tener mínimo 3 caracteres')
+      return
+    }
+
+    if (Number(amount) < 10) {
+      alert('El monto de pago debe ser mínimo $10')
+      return
+    }
+
+    if (Number(user_id) === 0) {
+      alert('Seleccione un asesor')
+      return
+    }
+
+    return true
+  }
+
+  edit = ruc => {
+    let option = 'EDIT'
+    fetch('https://ats.auditwhole.com/customers/' + ruc + '/show')
+      .then(response => response.json())
+      .then(res => {
+        let { custom, user } = res
+        custom.user_id = user.id
+        this.setState({
+          custom,
+          users: [{ id: user.id, atts: { name: user.name } }],
+          modal: true,
+          option
+        })
+      })
+  }
 
   render () {
-    let { customers, search, links, meta, modal, custom } = this.state
+    let { customers, search, links, meta, modal, custom, users } = this.state
 
     return (
       <Fragment>
@@ -162,9 +298,9 @@ class FormElementsControls extends React.Component {
                 options={[
                   {
                     id: 'tooltip-add-product',
-                    action: this.toggle,
+                    action: this.newCustom,
                     icon: 'plus',
-                    msmTooltip: 'Registrar cobro',
+                    msmTooltip: 'Agregar cliente',
                     color: 'primary'
                   }
                 ]}
@@ -176,6 +312,7 @@ class FormElementsControls extends React.Component {
               <FormCustomModal
                 modal={modal}
                 custom={custom}
+                users={users}
                 toggle={this.toggle}
                 selectUser={this.selectUser}
                 handleChange={this.handleChange}
@@ -208,7 +345,7 @@ class FormElementsControls extends React.Component {
                             <th>RAZON SOCIAL</th>
                             <th>AESESOR</th>
                             <th>VALOR</th>
-                            <th style={{ width: '2em' }}></th>
+                            <th style={{ width: '5em' }}></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -222,15 +359,23 @@ class FormElementsControls extends React.Component {
                                   </td>
                                   <td>${customer.atts.amount}</td>
                                   <td>
-                                    <Link to={'/app/cliente/' + customer.ruc}>
+                                    <ButtonGroup size='sm'>
                                       <Button
-                                        className='font-icon-sm pb-0 pt-1'
-                                        color='success'
-                                        onClick={e => this.onPays(customer.ruc)}
+                                        onClick={() => this.edit(customer.ruc)}
+                                        color='primary'
+                                        title='Editar cliente'
+                                        className='me-2'
+                                      >
+                                        <i className='nav-link-icon lnr-pencil'></i>
+                                      </Button>
+                                      <Link
+                                        to={'/app/cliente/' + customer.ruc}
+                                        className='btn btn-success'
+                                        title='Lista de pagos'
                                       >
                                         <i className='pe-7s-cash'></i>
-                                      </Button>
-                                    </Link>
+                                      </Link>
+                                    </ButtonGroup>
                                   </td>
                                 </tr>
                               ))

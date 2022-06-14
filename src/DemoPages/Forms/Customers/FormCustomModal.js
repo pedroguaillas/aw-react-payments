@@ -17,6 +17,7 @@ import {
 
 class FormCustomModal extends Component {
   state = {
+    users: [],
     item: '',
     suggestions: []
   }
@@ -59,8 +60,7 @@ class FormCustomModal extends Component {
           this.setState((state, props) => ({
             item:
               items.length !== 0
-                ? items.find(user => user.id === props.custom.user_id).atts
-                    .name
+                ? items.find(user => user.id === props.custom.user_id).atts.name
                 : '',
             users: [],
             suggestions: []
@@ -104,7 +104,7 @@ class FormCustomModal extends Component {
                 <Col sm={6}>
                   <Input
                     bsSize='sm'
-                    onChange={handleChange}
+                    onChange={handleChangeNumber}
                     value={custom.ruc}
                     name='ruc'
                     maxLength={13}
@@ -113,7 +113,7 @@ class FormCustomModal extends Component {
               </FormGroup>
               <FormGroup className='mb-1' row>
                 <Label for='razonsocial' sm={4}>
-                  Razon social
+                  Razón social
                 </Label>
                 <Col sm={8}>
                   <Input
@@ -149,6 +149,7 @@ class FormCustomModal extends Component {
                     onChange={handleChangeNumber}
                     value={custom.amount}
                     name='amount'
+                    maxLength={8}
                   />
                 </Col>
               </FormGroup>
