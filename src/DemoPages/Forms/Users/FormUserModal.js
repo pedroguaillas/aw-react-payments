@@ -15,7 +15,7 @@ import {
 
 class FormUserModal extends Component {
   render = () => {
-    let { user, handleChange, handleChangeNumber, toggle, submit } = this.props
+    let { user, handleChange, toggle, submit } = this.props
 
     return (
       <Fragment>
@@ -40,10 +40,54 @@ class FormUserModal extends Component {
                 <Col sm={6}>
                   <Input
                     bsSize='sm'
-                    onChange={handleChangeNumber}
+                    onChange={handleChange}
                     value={user.name}
                     name='name'
                     maxLength={50}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup className='mb-1' row>
+                <Label for='user' sm={4}>
+                  User
+                </Label>
+                <Col sm={6}>
+                  <Input
+                    bsSize='sm'
+                    onChange={handleChange}
+                    value={user.user}
+                    name='user'
+                    maxLength={20}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup className='mb-1' row>
+                <Label for='email' sm={4}>
+                  Correo electronico
+                </Label>
+                <Col sm={6}>
+                  <Input
+                    type='email'
+                    bsSize='sm'
+                    onChange={handleChange}
+                    value={user.email}
+                    name='email'
+                    maxLength={30}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup className='mb-1' row>
+                <Label for='password' sm={4}>
+                  Contraseña
+                </Label>
+                <Col sm={6}>
+                  <Input
+                    type='password'
+                    bsSize='sm'
+                    onChange={handleChange}
+                    value={user.password}
+                    name='password'
+                    maxLength={20}
                   />
                 </Col>
               </FormGroup>

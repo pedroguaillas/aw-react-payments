@@ -138,11 +138,6 @@ class SmartPayment extends React.Component {
       return
     }
 
-    if (!(payment.voucher > 0)) {
-      alert('El comprobante debe ser un número')
-      return
-    }
-
     return true
   }
 

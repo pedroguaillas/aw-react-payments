@@ -145,6 +145,7 @@ class FormCustomModal extends Component {
                 </Label>
                 <Col sm={4}>
                   <Input
+                    type='number'
                     bsSize='sm'
                     onChange={handleChangeNumber}
                     value={custom.amount}

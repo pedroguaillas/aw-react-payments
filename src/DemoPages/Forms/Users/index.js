@@ -25,7 +25,7 @@ class Users extends React.Component {
     search: '',
     links: null,
     meta: null,
-    user: {},
+    user: { rol: 'asesor' },
     modal: false
   }
 
@@ -101,8 +101,89 @@ class Users extends React.Component {
     }
   }
 
+  newUser = () => {
+    let option = 'CREATE'
+    this.setState(state => ({ modal: !state.modal, option }))
+  }
+
   toggle = () => {
     this.setState(state => ({ modal: !state.modal }))
+  }
+
+  handleChange = e => {
+    this.setState({
+      user: {
+        ...this.state.user,
+        [e.target.name]: e.target.value
+      }
+    })
+  }
+
+  submit = () => {
+    if (this.validate()) {
+      // Simple POST request with a JSON body using fetch
+      let { user, option } = this.state
+      const requestOptions = {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      }
+
+      if (option === 'CREATE') {
+        document.getElementById('btn-save').disabled = true
+        requestOptions.method = 'POST'
+
+        fetch('https://ats.auditwhole.com/register', requestOptions)
+          .then(response => response.json())
+          .then(res => {
+            let { success } = res
+            if (success) {
+              this.setState({ modal: false })
+              this.reloadPage()
+              document.getElementById('btn-save').disabled = false
+            } else {
+              alert('No se pudo registrar el usuario')
+            }
+          })
+          .catch(() => {
+            alert('Ya existe un cliente con ese RUC')
+          })
+      } else {
+        document.getElementById('btn-save').disabled = true
+        requestOptions.method = 'PUT'
+
+        fetch(
+          'https://ats.auditwhole.com/customers/' +
+            this.state.custom.ruc +
+            '/update',
+          requestOptions
+        )
+          .then(response => response.json())
+          .then(res => {
+            this.setState({ modal: false })
+            this.reloadPage()
+            document.getElementById('btn-save').disabled = false
+          })
+          .catch(() => {
+            alert('Ya existe un cliente con ese RUC')
+          })
+      }
+    }
+  }
+
+  validate = () => {
+    let { name, user, email, password } = this.state.user
+
+    if (
+      name === undefined ||
+      user === undefined ||
+      email === undefined ||
+      password === undefined
+    ) {
+      alert('Todos los campos son obligatorios')
+      return
+    }
+
+    return true
   }
 
   render () {
@@ -114,9 +195,9 @@ class Users extends React.Component {
           options={[
             {
               id: 'tooltip-add-product',
-              action: this.toggle,
+              action: this.newUser,
               icon: 'plus',
-              msmTooltip: 'Registrar cobro',
+              msmTooltip: 'Registrar usuario',
               color: 'primary'
             }
           ]}
@@ -134,7 +215,13 @@ class Users extends React.Component {
             exit={false}
           >
             <div>
-              <FormUserModal modal={modal} user={user} toggle={this.toggle} />
+              <FormUserModal
+                modal={modal}
+                user={user}
+                handleChange={this.handleChange}
+                toggle={this.toggle}
+                submit={this.submit}
+              />
               <Row>
                 <Col lg='12'>
                   <Card className='main-card mb-3'>

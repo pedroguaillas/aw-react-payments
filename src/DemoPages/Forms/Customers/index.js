@@ -185,6 +185,9 @@ class FormElementsControls extends React.Component {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
       let { custom, option } = this.state
+      if (custom.amount === undefined || custom.amount === '') {
+        custom.amount = 0
+      }
       const requestOptions = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(custom)
@@ -228,14 +231,9 @@ class FormElementsControls extends React.Component {
   }
 
   validate = () => {
-    let { ruc, razonsocial, sri, amount, user_id } = this.state.custom
+    let { ruc, razonsocial, sri, user_id } = this.state.custom
 
-    if (
-      ruc === undefined ||
-      razonsocial === undefined ||
-      sri === undefined ||
-      amount === undefined
-    ) {
+    if (ruc === undefined || razonsocial === undefined || sri === undefined) {
       alert('Todos los campos son obligatorios')
       return
     }
@@ -247,11 +245,6 @@ class FormElementsControls extends React.Component {
 
     if (razonsocial.length < 3) {
       alert('La razón social debe tener mínimo 3 caracteres')
-      return
-    }
-
-    if (Number(amount) < 10) {
-      alert('El monto de pago debe ser mínimo $10')
       return
     }
 
