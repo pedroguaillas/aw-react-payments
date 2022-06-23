@@ -16,7 +16,8 @@ let months = [
 let types = [
   { code: 'Efectivo', description: 'Efectivo', color: 'success' },
   { code: 'Transferencia', description: 'Transferencia', color: 'info' },
-  { code: 'Cheque', description: 'Cheque', color: 'focus' }
+  { code: 'Cheque', description: 'Cheque', color: 'focus' },
+  { code: 'Cruce', description: 'Cruce', color: 'warning' }
 ]
 
 export { months, types }

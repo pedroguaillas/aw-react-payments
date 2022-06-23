@@ -5,7 +5,7 @@ import { Row, Col, Card, CardBody, Table, Button } from 'reactstrap'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import FormPaymentModal from '../Payments/FormPaymentModal'
 
-import { months } from '../PaymentHelpers'
+import { months, types } from '../PaymentHelpers'
 
 class SmartPayment extends React.Component {
   state = {
@@ -255,7 +255,9 @@ class SmartPayment extends React.Component {
                         <thead>
                           <tr style={{ 'text-align': 'center' }}>
                             <th>Mes</th>
-                            <th>Total</th>
+                            <th>Tipo</th>
+                            <th>#Comp</th>
+                            <th>Monto</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -263,6 +265,20 @@ class SmartPayment extends React.Component {
                             <tr key={index}>
                               {/* -1 porque se refiere a la posicion del array */}
                               <td>{months[payment.month - 1].description}</td>
+                              <td style={{ 'text-align': 'center' }}>
+                                <div
+                                  className={`badge bg-${
+                                    types.find(
+                                      type => type.code === payment.type
+                                    ).color
+                                  }`}
+                                >
+                                  {payment.type}
+                                </div>
+                              </td>
+                              <td style={{ 'text-align': 'right' }}>
+                                {payment.voucher}
+                              </td>
                               <td style={{ 'text-align': 'right' }}>
                                 {payment.amount}
                               </td>
@@ -271,7 +287,7 @@ class SmartPayment extends React.Component {
                         </tbody>
                         <tfoot>
                           <tr>
-                            <th>Total</th>
+                            <th colSpan={3}>Total</th>
                             <th style={{ 'text-align': 'right' }}>
                               {totalpayments}
                             </th>
