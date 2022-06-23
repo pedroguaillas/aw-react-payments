@@ -185,7 +185,7 @@ class SmartPayment extends React.Component {
                         <thead>
                           <tr style={{ 'text-align': 'center' }}>
                             <th>RAZON SOCIAL</th>
-                            <th>TOTAL</th>
+                            <th>PAGADO</th>
                             <th style={{ width: '2em' }}></th>
                           </tr>
                         </thead>
@@ -216,6 +216,17 @@ class SmartPayment extends React.Component {
                             </tr>
                           ))}
                         </tbody>
+                        <thead>
+                          <tr>
+                            <th style={{ 'text-align': 'center' }}>TOTAL</th>
+                            <th style={{ 'text-align': 'right' }}>
+                              {customers.reduce((accumulator, object) => {
+                                return accumulator + object.total
+                              }, 0)}
+                            </th>
+                            <th></th>
+                          </tr>
+                        </thead>
                       </Table>
                     </CardBody>
                   </Card>
