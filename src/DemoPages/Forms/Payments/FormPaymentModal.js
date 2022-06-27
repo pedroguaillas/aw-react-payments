@@ -112,6 +112,21 @@ class FormPaymentModal extends Component {
                 </Col>
               </FormGroup>
               <FormGroup className='mb-1' row>
+                <Label for='date' sm={4}>
+                  Fecha
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    bsSize='sm'
+                    onChange={handleChange}
+                    value={payment.date}
+                    type='date'
+                    id='date'
+                    name='date'
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup className='mb-1' row>
                 <Label for='note' sm={4}>
                   Nota
                 </Label>

@@ -59,6 +59,9 @@ class Payments extends React.Component {
 
   //Show modal
   toggle = () => {
+    let date = new Date()
+    date.setHours(date.getHours() - 5)
+    date = date.toISOString().substring(0, 10)
     const {
       match: { params }
     } = this.props
@@ -68,7 +71,8 @@ class Payments extends React.Component {
       month,
       cliente_auditwhole_ruc: params.ruc,
       type: 'Efectivo',
-      amount: customer.amount
+      amount: customer.amount,
+      date
     }
     this.setState(state => ({ modal: !state.modal, payment }))
   }
@@ -147,11 +151,11 @@ class Payments extends React.Component {
           .then(response => response.json())
           .then(res => {
             let { payments } = this.state
-            var { year, month, amount, type, voucher, note } = res.payment
+            var { year, month, amount, type, voucher, note, date } = res.payment
             var index = payments.findIndex(e => e.id === payment.id)
             payments[index] = {
               id: payment.id,
-              atts: { year, month, amount, type, voucher, note }
+              atts: { year, month, amount, type, voucher, note, date }
             }
             this.setState({
               modal: false,
@@ -260,6 +264,7 @@ class Payments extends React.Component {
                               <th>Monto</th>
                               <th className='text-center'>Tipo Comprobante</th>
                               <th style={{ width: '4em' }}>Comprobante</th>
+                              <th className='text-center'>Fecha</th>
                               <th style={{ width: '5em' }}></th>
                             </tr>
                           </thead>
@@ -287,6 +292,9 @@ class Payments extends React.Component {
                                   </div>
                                 </td>
                                 <td>#{payment.atts.voucher}</td>
+                                <td className='text-center'>
+                                  {payment.atts.date}
+                                </td>
                                 <td>
                                   <ButtonGroup size='sm'>
                                     <Button

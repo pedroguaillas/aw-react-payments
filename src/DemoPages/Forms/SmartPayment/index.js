@@ -57,13 +57,17 @@ class SmartPayment extends React.Component {
 
   //Show modal
   toggle = () => {
+    let date = new Date()
+    date.setHours(date.getHours() - 5)
+    date = date.toISOString().substring(0, 10)
     let { year, month, customer } = this.state
     let payment = {
       year,
       month,
       cliente_auditwhole_ruc: customer.ruc,
       type: 'Efectivo',
-      amount: customer.amount
+      amount: customer.amount,
+      date
     }
     this.setState(state => ({ modal: !state.modal, payment }))
   }
@@ -256,7 +260,7 @@ class SmartPayment extends React.Component {
                           <tr style={{ 'text-align': 'center' }}>
                             <th>Mes</th>
                             <th>Tipo</th>
-                            <th>#Comp</th>
+                            <th>Fecha</th>
                             <th>Monto</th>
                           </tr>
                         </thead>
@@ -273,12 +277,14 @@ class SmartPayment extends React.Component {
                                     ).color
                                   }`}
                                 >
-                                  {payment.type}
+                                  {`${payment.type}${
+                                    payment.voucher !== null
+                                      ? ' #' + payment.voucher
+                                      : ''
+                                  }`}
                                 </div>
                               </td>
-                              <td style={{ 'text-align': 'right' }}>
-                                {payment.voucher}
-                              </td>
+                              <td className='text-center'>{payment.date}</td>
                               <td style={{ 'text-align': 'right' }}>
                                 {payment.amount}
                               </td>
