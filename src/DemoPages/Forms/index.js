@@ -5,11 +5,13 @@ import { Route } from 'react-router-dom'
 import Customers from './Customers/'
 import Users from './Users'
 import Payments from './Payments'
+import Salaries from './Salaries'
 
 // Layout
 import AppHeader from '../../Layout/AppHeader/'
 import AppSidebar from '../../Layout/AppSidebar/'
 import SmartPayment from './SmartPayment'
+import ListSalaries from './Salaries/ListSalaries'
 
 const Forms = ({ match }) => (
   <Fragment>
@@ -26,6 +28,11 @@ const Forms = ({ match }) => (
           <Route
             path={`${match.url}/asesor/:id/pagos`}
             component={SmartPayment}
+          />
+          <Route path={`${match.url}/sueldos`} component={Salaries} />
+          <Route
+            path={`${match.url}/asesor/:id/salarios`}
+            component={ListSalaries}
           />
         </div>
       </div>

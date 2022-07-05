@@ -224,9 +224,11 @@ class SmartPayment extends React.Component {
                           <tr>
                             <th style={{ 'text-align': 'center' }}>TOTAL</th>
                             <th style={{ 'text-align': 'right' }}>
-                              {customers.reduce((accumulator, object) => {
-                                return accumulator + object.total
-                              }, 0)}
+                              {customers
+                                .reduce((accumulator, object) => {
+                                  return accumulator + object.total
+                                }, 0)
+                                .toFixed(2)}
                             </th>
                             <th></th>
                           </tr>

@@ -16,9 +16,9 @@ export const FormsNav = [
     label: 'Asesores',
     to: '#/app/asesores'
   },
-  // {
-  //   icon: 'pe-7s-copy-file',
-  //   label: 'Reportes',
-  //   to: '#/app/validation'
-  // }
+  {
+    icon: 'pe-7s-cash',
+    label: 'Sueldos',
+    to: '#/app/sueldos'
+  }
 ]

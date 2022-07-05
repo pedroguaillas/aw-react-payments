@@ -55,7 +55,9 @@ class FormPaymentModal extends Component {
                     id='month'
                   >
                     {months.map((month, index) => (
-                      <option value={month.code}>{month.description}</option>
+                      <option key={`month${index}`} value={month.code}>
+                        {month.description}
+                      </option>
                     ))}
                   </select>
                 </Col>
