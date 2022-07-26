@@ -182,7 +182,7 @@ class SmartPayment extends React.Component {
                   handleChangeNumber={this.handleChangeNumber}
                   submit={this.submit}
                 />
-                <Col lg='8'>
+                <Col lg={7}>
                   <Card className='main-card mb-3'>
                     <CardBody>
                       <Table size='sm' bordered responsive>
@@ -206,7 +206,9 @@ class SmartPayment extends React.Component {
                             >
                               <td>{item.razonsocial}</td>
                               <td style={{ 'text-align': 'right' }}>
-                                {item.total}
+                                {item.total === null
+                                  ? '0.00'
+                                  : item.total.toFixed(2)}
                               </td>
                               <th>
                                 <Button
@@ -237,7 +239,7 @@ class SmartPayment extends React.Component {
                     </CardBody>
                   </Card>
                 </Col>
-                <Col lg='4'>
+                <Col lg={5}>
                   <Card className='main-card'>
                     <div className='card-header'>
                       {`${
@@ -297,7 +299,7 @@ class SmartPayment extends React.Component {
                           <tr>
                             <th colSpan={3}>Total</th>
                             <th style={{ 'text-align': 'right' }}>
-                              {totalpayments}
+                              {totalpayments.toFixed(2)}
                             </th>
                           </tr>
                         </tfoot>

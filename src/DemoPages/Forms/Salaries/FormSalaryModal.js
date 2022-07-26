@@ -53,7 +53,7 @@ class FormSalaryModal extends Component {
                   Mes
                 </Label>
                 <Col sm={6}>
-                  <select
+                  {/* <select
                     className='form form-control'
                     onChange={onChange}
                     value={salary.month}
@@ -65,7 +65,14 @@ class FormSalaryModal extends Component {
                         {month.description}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <Input
+                    type='month'
+                    onChange={onChange}
+                    value={salary.month}
+                    bsSize='sm'
+                    name='month'
+                  />
                 </Col>
               </FormGroup>
               <FormGroup className='mb-1' row>
@@ -111,15 +118,15 @@ class FormSalaryModal extends Component {
                 hidden={type_salary === 'anticipo'}
                 row
               >
-                <Label sm={2} for='advance'>
+                <Label sm={2} for='cheque'>
                   Cheque
                 </Label>
                 <Col sm={6}>
                   <Input
                     onChange={onChange}
                     bsSize='sm'
-                    name='advance'
-                    value={salary.advance}
+                    name='cheque'
+                    value={salary.cheque}
                     maxLength={30}
                   />
                 </Col>
