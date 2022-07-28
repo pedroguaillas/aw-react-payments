@@ -9,15 +9,13 @@ import { months } from '../PaymentHelpers'
 
 class ListSalaries extends React.Component {
   state = {
-    search: '',
     salaries: [],
-    links: null,
-    meta: null,
     user: {},
     salary: {},
     salary_selected: null,
     modal: false,
     salaryadvances: [],
+    salaryadvancesofpays: [],
     type_salary: 'anticipo'
   }
 
@@ -34,70 +32,9 @@ class ListSalaries extends React.Component {
     fetch('https://ats.auditwhole.com/salarylist', requestOptions)
       .then(response => response.json())
       .then(({ salaries, user, year, month }) => {
-        let salary = {
-          month: `${year}-${month < 10 ? '0' : ''}${month}`,
-          amount: user.salary,
-          user_id: user.id
-        }
-        this.setState({ salaries, user, year, month, salary })
+        // Aun no le voy a paginar los salarios
+        this.setState({ salaries, user, year, month })
       })
-  }
-
-  reqNewPage = async (e, page) => {
-    e.preventDefault()
-
-    if (page !== null) {
-      let { search, meta } = this.state
-      try {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search })
-        }
-        fetch(
-          `${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`,
-          requestOptions
-        )
-          .then(response => response.json())
-          .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              salaries: data,
-              links,
-              meta
-            })
-          })
-      } catch (error) {
-        console.log(error)
-      }
-    }
-  }
-
-  onChangeSearch = async e => {
-    let { value } = e.target
-
-    try {
-      // Simple POST request with a JSON body using fetch
-      const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search: value })
-      }
-      fetch('https://ats.auditwhole.com/listusser', requestOptions)
-        .then(response => response.json())
-        .then(res => {
-          let { data, links, meta } = res
-          this.setState({
-            search: value,
-            salaries: data,
-            links,
-            meta
-          })
-        })
-    } catch (error) {
-      console.log(error)
-    }
   }
 
   onChange = e => {
@@ -116,16 +53,6 @@ class ListSalaries extends React.Component {
     }
   }
 
-  addSalaryItem = () => {
-    let { salaryitems } = this.state
-    salaryitems.push({
-      payment_id: 0,
-      rason: 'Comercial los alamos',
-      amount: 545
-    })
-    this.setState({ salaryitems })
-  }
-
   onCheck = e => {
     this.setState({
       type_salary: e.target.value
@@ -141,7 +68,9 @@ class ListSalaries extends React.Component {
     let salary = {
       month: `${year}-${month < 10 ? '0' : ''}${month}`,
       amount: user.salary,
-      user_id: user.id
+      user_id: user.id,
+      balance: '',
+      cheque: ''
     }
     this.setState(state => ({
       salary,
@@ -156,7 +85,7 @@ class ListSalaries extends React.Component {
 
       if (type_salary === 'cheque') {
         salary.amount_cheque =
-          salary.amount - (salary.balance === undefined ? 0 : salary.balance)
+          salary.amount - (salary.balance === '' ? 0 : salary.balance)
       }
 
       const requestOptions = {
@@ -178,7 +107,7 @@ class ListSalaries extends React.Component {
             if (salary.amount_cheque === undefined) {
               salary.amount_cheque = 0
             }
-            salaries.unshift({ id: salary.id, atts: salary })
+            salaries.unshift(salary)
             let { month } = salary
             if (month === 12) {
               month = 1
@@ -227,7 +156,7 @@ class ListSalaries extends React.Component {
     let { type_salary, salary } = this.state
 
     if (type_salary === 'cheque') {
-      if (salary.cheque === undefined || salary.cheque === '') {
+      if (salary.cheque === '') {
         alert('Debe llenar el numero de cheque')
         return
       }
@@ -237,7 +166,7 @@ class ListSalaries extends React.Component {
   }
 
   onSelectSalary = salary_selected => {
-    this.setState({ salary_selected })
+    this.setState({ salary_selected, salaryadvances: [] })
 
     fetch('https://ats.auditwhole.com/salaryadvances/' + salary_selected.id)
       .then(res => res.json())
@@ -246,6 +175,7 @@ class ListSalaries extends React.Component {
       })
   }
 
+  // START Add salary advance
   addSalaryAdvance = () => {
     let { salaryadvances } = this.state
     salaryadvances.push({ description: '', amount: '', edit: false })
@@ -269,10 +199,10 @@ class ListSalaries extends React.Component {
     this.setState({ salaryadvances })
   }
 
-  saveAdvance = index => e => {
+  checkAdvance = index => e => {
     let { name, checked } = e.target
-    this.submitSaveSalaryAdvance(index)
     if (checked) {
+      this.submitSalaryAdvance(index)
     } else {
       let { salaryadvances } = this.state
       salaryadvances[index][name] = checked
@@ -280,7 +210,7 @@ class ListSalaries extends React.Component {
     }
   }
 
-  submitSaveSalaryAdvance = index => {
+  submitSalaryAdvance = index => {
     if (this.validateSalaryAdvance(index)) {
       // Simple POST request with a JSON body using fetch
       let { salaryadvances, salary_selected } = this.state
@@ -296,7 +226,7 @@ class ListSalaries extends React.Component {
 
         fetch('https://ats.auditwhole.com/salaryadvances', requestOptions)
           .then(response => response.json())
-          .then(res => {
+          .then(() => {
             let { salaryadvances } = this.state
             salaryadvances[index].edit = true
             this.setState({ salaryadvances })
@@ -345,6 +275,20 @@ class ListSalaries extends React.Component {
     return true
   }
 
+  // END Add salary advance
+
+  // START Add salary advance OF PAY
+  addSalaryAdvanceofpay = () => {
+    let { salaryadvancesofpays } = this.state
+    salaryadvancesofpays.push({
+      salary_id: 0,
+      payment_id: 0,
+      amount: '',
+      edit: false
+    })
+    this.setState({ salaryadvancesofpays })
+  }
+
   render () {
     let {
       type_salary,
@@ -353,7 +297,8 @@ class ListSalaries extends React.Component {
       salary,
       salary_selected,
       salaries,
-      salaryadvances
+      salaryadvances,
+      salaryadvancesofpays
     } = this.state
     return (
       <Fragment>
@@ -383,10 +328,10 @@ class ListSalaries extends React.Component {
                 submit={this.submitSaveSalary}
               />
               <Row>
-                <Col lg='6'>
+                <Col lg={5}>
                   <Card className='main-card mb-3'>
                     <div className='card-header'>
-                      COBROS
+                      SALARIOS
                       <div className='btn-actions-pane-right'>
                         <div role='group' className='btn-group-sm btn-group'>
                           <button
@@ -399,13 +344,13 @@ class ListSalaries extends React.Component {
                       </div>
                     </div>
                     <CardBody>
-                      <Table striped size='sm' responsive>
+                      <Table size='sm' responsive>
                         <thead>
                           <tr style={{ 'text-align': 'center' }}>
                             <th>Mes</th>
                             <th>Sueldo</th>
-                            <th>Saldo</th>
-                            <th>Pagado</th>
+                            {/* <th>Saldo</th> */}
+                            <th>Cobrado</th>
                             <th>Faltante</th>
                             <th style={{ width: '2em' }}></th>
                           </tr>
@@ -416,26 +361,35 @@ class ListSalaries extends React.Component {
                                 <tr
                                   key={`salary${index}`}
                                   style={{ 'text-align': 'center' }}
+                                  className={
+                                    salary_selected !== null &&
+                                    salary_selected.id === salary.id
+                                      ? 'table-active'
+                                      : null
+                                  }
                                 >
                                   {/* -1 Por que se refiere a la posicion del array */}
                                   <td>
                                     {
-                                      months[salary.atts.month.substring(5) - 1]
+                                      months[salary.month.substring(5) - 1]
                                         .description
                                     }
                                   </td>
-                                  <td>{salary.atts.amount}</td>
-                                  <td>{salary.atts.balance}</td>
+                                  <td>{salary.amount}</td>
+                                  {/* <td>{salary.balance}</td> */}
                                   <td>
-                                    {salary.atts.amount_cheque +
-                                      salary.atts.paid}
+                                    {salary.balance +
+                                      salary.amount_cheque +
+                                      Number(
+                                        salary.paid !== null ? salary.paid : 0
+                                      )}
                                   </td>
                                   <td>
                                     {(
-                                      salary.atts.amount -
-                                      salary.atts.balance -
-                                      salary.atts.amount_cheque -
-                                      salary.atts.paid
+                                      salary.amount -
+                                      salary.balance -
+                                      salary.amount_cheque -
+                                      salary.paid
                                     ).toFixed(2)}
                                   </td>
                                   <td>
@@ -458,11 +412,14 @@ class ListSalaries extends React.Component {
                 <SalaryItems
                   salary={salary_selected}
                   salaryadvances={salaryadvances}
+                  salaryadvancesofpays={salaryadvancesofpays}
                   type_salary={type_salary}
+                  user_id={user.id}
                   addSalaryAdvance={this.addSalaryAdvance}
+                  addSalaryAdvanceofpay={this.addSalaryAdvanceofpay}
                   changeSalaryAdvance={this.changeSalaryAdvance}
                   changeSalaryAdvanceAmount={this.changeSalaryAdvanceAmount}
-                  saveAdvance={this.saveAdvance}
+                  checkAdvance={this.checkAdvance}
                 />
               </Row>
             </div>

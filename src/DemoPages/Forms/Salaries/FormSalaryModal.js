@@ -12,7 +12,6 @@ import {
   Label,
   ModalFooter
 } from 'reactstrap'
-import { months } from '../PaymentHelpers'
 
 class FormSalaryModal extends Component {
   render = () => {
@@ -34,7 +33,7 @@ class FormSalaryModal extends Component {
           className={this.props.className}
           size={this.props.size}
         >
-          <ModalHeader toggle={toggle}>Registrar cobro</ModalHeader>
+          <ModalHeader toggle={toggle}>Registrar salario</ModalHeader>
           <ModalBody>
             <Form className='text-right'>
               <Row form>
@@ -53,19 +52,6 @@ class FormSalaryModal extends Component {
                   Mes
                 </Label>
                 <Col sm={6}>
-                  {/* <select
-                    className='form form-control'
-                    onChange={onChange}
-                    value={salary.month}
-                    name='month'
-                    id='month'
-                  >
-                    {months.map((month, index) => (
-                      <option key={`month${index}`} value={month.code}>
-                        {month.description}
-                      </option>
-                    ))}
-                  </select> */}
                   <Input
                     type='month'
                     onChange={onChange}
@@ -123,7 +109,7 @@ class FormSalaryModal extends Component {
                 </Label>
                 <Col sm={6}>
                   <Input
-                    onChange={onChange}
+                    onChange={onChangeNumber}
                     bsSize='sm'
                     name='cheque'
                     value={salary.cheque}
