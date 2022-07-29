@@ -30,11 +30,36 @@ class ListSalaries extends React.Component {
       body: JSON.stringify({ paginate: 15, user_id: params.id })
     }
     fetch('https://ats.auditwhole.com/salarylist', requestOptions)
-      .then(response => response.json())
-      .then(({ salaries, user, year, month }) => {
+      .then(res => res.json())
+      .then(({ salaries, user }) => {
         // Aun no le voy a paginar los salarios
-        this.setState({ salaries, user, year, month })
+        this.setState({ salaries, user })
       })
+  }
+
+  calMonth = () => {
+    let { salaries } = this.state
+
+    if (salaries.length === 0) {
+      let date = new Date()
+      date.setMonth(date.getMonth() - 1)
+      return date.toISOString().substring(0, 7)
+    }
+
+    let arrMonth = salaries[0].month.split('-')
+
+    if (arrMonth[1] === '12') {
+      // Mes de Diciembre a Enero
+      arrMonth[1] = '01'
+      // Se suma un año mas
+      arrMonth[0] = parseInt(arrMonth[0]) + 1
+    } else {
+      // Se suma el mes
+      let newMonth = parseInt(arrMonth[1]) + 1
+      arrMonth[1] = newMonth < 10 ? '0' + newMonth : newMonth
+    }
+
+    return arrMonth.join('-')
   }
 
   onChange = e => {
@@ -64,9 +89,9 @@ class ListSalaries extends React.Component {
   }
 
   newSalary = () => {
-    let { year, month, user } = this.state
+    let { user } = this.state
     let salary = {
-      month: `${year}-${month < 10 ? '0' : ''}${month}`,
+      month: this.calMonth(),
       amount: user.salary,
       user_id: user.id,
       balance: '',
@@ -83,9 +108,15 @@ class ListSalaries extends React.Component {
       // Simple POST request with a JSON body using fetch
       let { type_salary, salary } = this.state
 
+      if (salary.balance === '') {
+        salary.balance = 0
+      }
+
       if (type_salary === 'cheque') {
-        salary.amount_cheque =
-          salary.amount - (salary.balance === '' ? 0 : salary.balance)
+        salary.amount_cheque = salary.amount - salary.balance
+      } else {
+        // Se elimina el atributo porque se iria con ''
+        delete salary.cheque
       }
 
       const requestOptions = {
@@ -100,26 +131,20 @@ class ListSalaries extends React.Component {
           .then(res => res.json())
           .then(({ salary }) => {
             salary.paid = 0
-            let { salaries, year } = this.state
-            if (salary.balance === undefined) {
-              salary.balance = 0
+            let { salaries } = this.state
+            salary.balance =
+              salary.balance === undefined ? 0 : Number(salary.balance)
+            if (salary.cheque === undefined) {
+              salary.cheque = null
             }
-            if (salary.amount_cheque === undefined) {
-              salary.amount_cheque = 0
-            }
+            salary.amount_cheque =
+              salary.amount_cheque === undefined
+                ? 0
+                : Number(salary.amount_cheque)
             salaries.unshift(salary)
-            let { month } = salary
-            if (month === 12) {
-              month = 1
-              year++
-            } else {
-              month++
-            }
             this.setState({
               modal: false,
-              salaries,
-              year,
-              month
+              salaries
             })
             document.getElementById('btn-save').disabled = false
           })
@@ -133,15 +158,11 @@ class ListSalaries extends React.Component {
           'https://ats.auditwhole.com/salaries/' + salary.id,
           requestOptions
         )
-          .then(response => response.json())
-          .then(res => {
+          .then(res => res.json())
+          .then(salary => {
             let { salaries } = this.state
-            var { year, month, amount, type, voucher, note, date } = res.salary
             var index = salaries.findIndex(e => e.id === salary.id)
-            salaries[index] = {
-              id: salary.id,
-              atts: { year, month, amount, type, voucher, note, date }
-            }
+            salaries[index] = salary
             this.setState({
               modal: false,
               salaries
@@ -166,7 +187,11 @@ class ListSalaries extends React.Component {
   }
 
   onSelectSalary = salary_selected => {
-    this.setState({ salary_selected, salaryadvances: [] })
+    this.setState({
+      salary_selected,
+      salaryadvances: [],
+      salaryadvancesofpays: []
+    })
 
     fetch('https://ats.auditwhole.com/salaryadvances/' + salary_selected.id)
       .then(res => res.json())
@@ -289,6 +314,11 @@ class ListSalaries extends React.Component {
     this.setState({ salaryadvancesofpays })
   }
 
+  selectPay = (custum, pay, index) => {
+    let { salaryadvancesofpays } = this.state
+    salaryadvancesofpays[index].amount = pay.amount
+  }
+
   render () {
     let {
       type_salary,
@@ -344,12 +374,11 @@ class ListSalaries extends React.Component {
                       </div>
                     </div>
                     <CardBody>
-                      <Table size='sm' responsive>
+                      <Table className='text-center' size='sm' responsive>
                         <thead>
-                          <tr style={{ 'text-align': 'center' }}>
+                          <tr>
                             <th>Mes</th>
                             <th>Sueldo</th>
-                            {/* <th>Saldo</th> */}
                             <th>Cobrado</th>
                             <th>Faltante</th>
                             <th style={{ width: '2em' }}></th>
@@ -360,7 +389,6 @@ class ListSalaries extends React.Component {
                             ? salaries.map((salary, index) => (
                                 <tr
                                   key={`salary${index}`}
-                                  style={{ 'text-align': 'center' }}
                                   className={
                                     salary_selected !== null &&
                                     salary_selected.id === salary.id
@@ -376,13 +404,12 @@ class ListSalaries extends React.Component {
                                     }
                                   </td>
                                   <td>{salary.amount}</td>
-                                  {/* <td>{salary.balance}</td> */}
                                   <td>
-                                    {salary.balance +
+                                    {(
+                                      salary.balance +
                                       salary.amount_cheque +
-                                      Number(
-                                        salary.paid !== null ? salary.paid : 0
-                                      )}
+                                      salary.paid
+                                    ).toFixed(2)}
                                   </td>
                                   <td>
                                     {(
@@ -420,6 +447,7 @@ class ListSalaries extends React.Component {
                   changeSalaryAdvance={this.changeSalaryAdvance}
                   changeSalaryAdvanceAmount={this.changeSalaryAdvanceAmount}
                   checkAdvance={this.checkAdvance}
+                  selectPay={this.selectPay}
                 />
               </Row>
             </div>

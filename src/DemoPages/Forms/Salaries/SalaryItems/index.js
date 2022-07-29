@@ -15,7 +15,8 @@ class SalaryItems extends React.Component {
       addSalaryAdvanceofpay,
       changeSalaryAdvance,
       changeSalaryAdvanceAmount,
-      checkAdvance
+      checkAdvance,
+      selectPay
     } = this.props
 
     if (salary === null) {
@@ -58,9 +59,9 @@ class SalaryItems extends React.Component {
               ) : null}
             </div>
             <CardBody>
-              <Table size='sm' bordered responsive>
+              <Table className='text-center' size='sm' bordered responsive>
                 <thead>
-                  <tr className='text-center'>
+                  <tr>
                     <th colSpan={2}>SUELDO</th>
                     <th style={{ 'text-align': 'right' }}>
                       {amount.toFixed(2)}
@@ -68,7 +69,7 @@ class SalaryItems extends React.Component {
                     <th></th>
                   </tr>
                   {balance > 0 ? (
-                    <tr className='text-center'>
+                    <tr>
                       <td colSpan={2}>Saldo mes anterior</td>
                       <td style={{ 'text-align': 'right' }}>
                         {balance.toFixed(2)}
@@ -77,7 +78,7 @@ class SalaryItems extends React.Component {
                     </tr>
                   ) : null}
                   {salaryadvances.length > 0 ? (
-                    <tr className='text-center'>
+                    <tr>
                       <th>+</th>
                       <th>Anticipo</th>
                       <th>Monto</th>
@@ -89,7 +90,7 @@ class SalaryItems extends React.Component {
                   {salaryadvancesofpays.length > 0
                     ? salaryadvancesofpays.map((salaryadvancesofpay, index) => (
                         <tr key={`salaryadvanceofpayrow${index}`}>
-                          <td className='text-center'>{index + 1}</td>
+                          <td>{index + 1}</td>
                           <td>
                             {/* Cuando edit undefined O es editar entonces solo muestra texto */}
                             {/* Cuando es NO EDITAR entonces muestra el input porque esta negando el edit */}
@@ -97,7 +98,11 @@ class SalaryItems extends React.Component {
                             salaryadvancesofpay.edit ? (
                               'ssofpay.description'
                             ) : (
-                              <SelectPayOfCustom user_id={user_id} />
+                              <SelectPayOfCustom
+                                user_id={user_id}
+                                selectPay={selectPay}
+                                index={index}
+                              />
                             )}
                           </td>
                           <td style={{ 'text-align': 'right' }}>
@@ -192,9 +197,9 @@ class SalaryItems extends React.Component {
                   {amount_cheque > 0 ? (
                     <tr className='text-center'>
                       <td colSpan={2}>Pagado segun cheque # {cheque}</td>
-                      <th style={{ 'text-align': 'right' }}>
+                      <td style={{ 'text-align': 'right' }}>
                         {amount_cheque.toFixed(2)}
-                      </th>
+                      </td>
                       <th></th>
                     </tr>
                   ) : null}
@@ -207,14 +212,14 @@ class SalaryItems extends React.Component {
                           Completar Pago
                         </Button>
                       </td>
-                      <th style={{ 'text-align': 'right' }}>
+                      <td style={{ 'text-align': 'right' }}>
                         {(
                           amount -
                           sum_salary_advance -
                           balance +
                           amount_cheque
                         ).toFixed(2)}
-                      </th>
+                      </td>
                       <th></th>
                     </tr>
                   ) : null}
