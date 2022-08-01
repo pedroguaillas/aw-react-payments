@@ -1,5 +1,13 @@
 import React, { Fragment } from 'react'
-import { Col, Card, CardBody, Table, Button, Input } from 'reactstrap'
+import {
+  Col,
+  Card,
+  CardBody,
+  Table,
+  Button,
+  Input,
+  ButtonGroup
+} from 'reactstrap'
 import { months } from '../../PaymentHelpers'
 
 import SelectPayOfCustom from './SelectPayOfCustom'
@@ -16,14 +24,15 @@ class SalaryItems extends React.Component {
       changeSalaryAdvance,
       changeSalaryAdvanceAmount,
       checkAdvance,
-      selectPay
+      selectPay,
+      checkAdvanceofpays
     } = this.props
 
     if (salary === null) {
       return null
     }
 
-    let { month, amount, balance, cheque, amount_cheque } = salary
+    let { month, amount, balance, cheque, paid, amount_cheque } = salary
 
     let sum_salary_advance = Number(
       salaryadvances
@@ -37,24 +46,24 @@ class SalaryItems extends React.Component {
           <Card className='main-card'>
             <div className='card-header'>
               {`PAGOS ${months[month.substring(5) - 1].description}`}
-              {cheque === null && sum_salary_advance + balance < amount ? (
+              {cheque === null && paid + balance < amount ? (
                 <div className='btn-actions-pane-right'>
-                  <div role='group' className='btn-group-sm btn-group'>
+                  <ButtonGroup>
                     <Button
                       title='Agregar anticipo'
                       onClick={e => addSalaryAdvance()}
-                      className='btn btn-primary'
+                      className='btn btn-primary mr-2'
                     >
                       +
                     </Button>
-                    <button
-                      title='Agregar anticipo de pago'
+                    <Button
+                      title='Agregar anticipo de pago acticipo'
                       onClick={e => addSalaryAdvanceofpay()}
                       className='btn btn-success'
                     >
                       +
-                    </button>
-                  </div>
+                    </Button>
+                  </ButtonGroup>
                 </div>
               ) : null}
             </div>
@@ -77,7 +86,8 @@ class SalaryItems extends React.Component {
                       <th></th>
                     </tr>
                   ) : null}
-                  {salaryadvances.length > 0 ? (
+                  {salaryadvances.length > 0 ||
+                  salaryadvancesofpays.length > 0 ? (
                     <tr>
                       <th>+</th>
                       <th>Anticipo</th>
@@ -128,7 +138,7 @@ class SalaryItems extends React.Component {
                                   ? true
                                   : salaryadvancesofpay.edit
                               }
-                              onChange={checkAdvance(index)}
+                              onChange={checkAdvanceofpays(index)}
                             />
                           </td>
                         </tr>

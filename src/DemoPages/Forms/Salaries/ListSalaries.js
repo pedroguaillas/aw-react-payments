@@ -314,9 +314,102 @@ class ListSalaries extends React.Component {
     this.setState({ salaryadvancesofpays })
   }
 
-  selectPay = (custum, pay, index) => {
+  selectPay = (pay, index) => {
     let { salaryadvancesofpays } = this.state
-    salaryadvancesofpays[index].amount = pay.amount
+
+    // Determinar que ese pago no este en esta lista
+    if (
+      salaryadvancesofpays.findIndex(saop => saop.payment_id === pay.id) > -1
+    ) {
+      alert('No se puede seleccionar el mismo pago dos veces')
+      return
+    }
+
+    // Determinar cuanto falta para el cobro total
+    // Si supera el monto del salario del cruce, poner el parcial no mas
+    let amount = pay.amount
+    salaryadvancesofpays[index].amount = amount
+    salaryadvancesofpays[index].payment_id = pay.id
+    this.setState({ salaryadvancesofpays })
+
+    return true
+  }
+
+  checkAdvanceofpays = index => e => {
+    let { name, checked } = e.target
+    if (checked) {
+      this.submitSalaryAdvanceofpays(index)
+    } else {
+      let { salaryadvancesofpays } = this.state
+      salaryadvancesofpays[index][name] = checked
+      this.setState({ salaryadvancesofpays })
+    }
+  }
+
+  submitSalaryAdvanceofpays = index => {
+    if (this.validateSalaryAdvanceOfPay(index)) {
+      // Simple POST request with a JSON body using fetch
+      let { salaryadvancesofpays, salary_selected } = this.state
+      let salaryadvancesofpay = salaryadvancesofpays[index]
+      salaryadvancesofpay.salary_id = salary_selected.id
+
+      const requestOptions = {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(salaryadvancesofpay)
+      }
+      if (salaryadvancesofpay.id === undefined) {
+        requestOptions.method = 'POST'
+
+        fetch('https://ats.auditwhole.com/salaryadvanceofpays', requestOptions)
+          .then(res => res.json())
+          .then(({ salaryadvancesofpay }) => {
+            let { salaryadvancesofpays } = this.state
+            salaryadvancesofpays[index].edit = true
+            salaryadvancesofpays[index].id = salaryadvancesofpay.id
+            this.setState({ salaryadvancesofpays })
+          })
+          .catch(() => {
+            alert('Se produjo un error')
+          })
+      } else {
+        requestOptions.method = 'PUT'
+
+        // fetch(
+        //   'https://ats.auditwhole.com/salaryadvances/' + salaryadvancesofpay.id,
+        //   requestOptions
+        // )
+        //   .then(res => res.json())
+        //   .then(res => {
+        //     let { salaryadvances } = this.state
+        //     salaryadvances[index].edit = true
+        //     this.setState({ salaryadvances })
+        //   })
+        //   .catch(() => {
+        //     alert('Se produjo un error')
+        //   })
+      }
+    }
+  }
+
+  validateSalaryAdvanceOfPay = index => {
+    let { payment_id, amount } = this.state.salaryadvancesofpays[index]
+
+    if (payment_id === 0) {
+      alert('Seleccione el pago')
+      return
+    }
+
+    if (('' + amount).trim().length === 0) {
+      alert('Agregue el monto al anticipo')
+      return
+    }
+
+    if (isNaN(amount)) {
+      alert('El monto del anticipo debe ser un número')
+      return
+    }
+
+    return true
   }
 
   render () {
@@ -381,13 +474,14 @@ class ListSalaries extends React.Component {
                             <th>Sueldo</th>
                             <th>Cobrado</th>
                             <th>Faltante</th>
-                            <th style={{ width: '2em' }}></th>
+                            {/* <th style={{ width: '2em' }}></th> */}
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody style={{ cursor: 'pointer' }}>
                           {salaries.length > 0
                             ? salaries.map((salary, index) => (
                                 <tr
+                                  onClick={() => this.onSelectSalary(salary)}
                                   key={`salary${index}`}
                                   className={
                                     salary_selected !== null &&
@@ -419,7 +513,7 @@ class ListSalaries extends React.Component {
                                       salary.paid
                                     ).toFixed(2)}
                                   </td>
-                                  <td>
+                                  {/* <td>
                                     <Button
                                       className='font-icon-sm pb-0 pt-1'
                                       color='success'
@@ -427,7 +521,7 @@ class ListSalaries extends React.Component {
                                     >
                                       <i className='pe-7s-cash'></i>
                                     </Button>
-                                  </td>
+                                  </td> */}
                                 </tr>
                               ))
                             : null}
@@ -448,6 +542,7 @@ class ListSalaries extends React.Component {
                   changeSalaryAdvanceAmount={this.changeSalaryAdvanceAmount}
                   checkAdvance={this.checkAdvance}
                   selectPay={this.selectPay}
+                  checkAdvanceofpays={this.checkAdvanceofpays}
                 />
               </Row>
             </div>

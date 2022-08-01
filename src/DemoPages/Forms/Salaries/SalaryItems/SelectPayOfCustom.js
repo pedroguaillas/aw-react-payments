@@ -40,6 +40,7 @@ class SelectPayOfCustom extends Component {
   }
 
   onChange = customer_selected => e => {
+    e.preventDefault()
     fetch(
       `https://ats.auditwhole.com/custom/${customer_selected.RUC}/paymentcross`
     )
@@ -59,13 +60,14 @@ class SelectPayOfCustom extends Component {
   onSelectPay = pay => {
     let { customer_selected } = this.state
 
-    let item = `${customer_selected.razonsocial} - ${
-      months[pay.month - 1].description
-    } - ${pay.amount}`
-
-    this.setState(state => ({ item, modal: !state.modal }))
     let { selectPay, index } = this.props
-    selectPay(customer_selected, pay, index)
+    if (selectPay(pay, index)) {
+      let item = `${customer_selected.razonsocial} - ${
+        months[pay.month - 1].description
+      }`
+
+      this.setState(state => ({ item, modal: !state.modal }))
+    }
   }
 
   render = () => {
@@ -76,11 +78,7 @@ class SelectPayOfCustom extends Component {
           <Row key={123}>
             <Col>
               <InputGroup>
-                <Input
-                  value={item}
-                  placeholder='Cliente - Mes - Monto'
-                  disabled
-                />
+                <Input value={item} placeholder='Cliente - Mes' disabled />
                 <Button onClick={this.showModal}>Seleccionar pago</Button>
               </InputGroup>
             </Col>
@@ -102,7 +100,7 @@ class SelectPayOfCustom extends Component {
                   <thead>
                     <tr className='text-center'>
                       <th>Cliente / Razon social</th>
-                      <th style={{ width: '2em' }}></th>
+                      {/* <th style={{ width: '2em' }}></th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -115,9 +113,10 @@ class SelectPayOfCustom extends Component {
                             ? 'table-active'
                             : null
                         }
+                        onClick={this.onChange(customer)}
                       >
                         <td>{customer.razonsocial}</td>
-                        <th className='text-center'>
+                        {/* <td className='text-center'>
                           <input
                             onChange={this.onChange(customer)}
                             name='selectcustom'
@@ -128,7 +127,7 @@ class SelectPayOfCustom extends Component {
                               customer_selected.RUC === customer.RUC
                             }
                           />
-                        </th>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
