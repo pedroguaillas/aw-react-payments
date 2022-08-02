@@ -21,6 +21,22 @@ class SelectPayOfCustom extends Component {
     payments: []
   }
 
+  componentDidMount () {
+    let { id, salaryadvanceofpays } = this.props
+    let items =
+      salaryadvanceofpays.length !== 0 && id > 0
+        ? salaryadvanceofpays.filter(
+            salaryadvancesofpay => salaryadvancesofpay.id === id
+          )
+        : null
+    if (items !== null && items.length > 0) {
+      let { razonsocial, month } = items[0]
+      this.setState({
+        item: `${razonsocial} - ${months[month - 1].description}`
+      })
+    }
+  }
+
   toggle = () => {
     this.setState(state => ({ modal: !state.modal }))
   }

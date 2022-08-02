@@ -15,7 +15,7 @@ class ListSalaries extends React.Component {
     salary_selected: null,
     modal: false,
     salaryadvances: [],
-    salaryadvancesofpays: [],
+    salaryadvanceofpays: [],
     type_salary: 'anticipo'
   }
 
@@ -190,13 +190,13 @@ class ListSalaries extends React.Component {
     this.setState({
       salary_selected,
       salaryadvances: [],
-      salaryadvancesofpays: []
+      salaryadvanceofpays: []
     })
 
     fetch('https://ats.auditwhole.com/salaryadvances/' + salary_selected.id)
       .then(res => res.json())
-      .then(({ salaryadvances }) => {
-        this.setState({ salaryadvances })
+      .then(({ salaryadvances, salaryadvanceofpays }) => {
+        this.setState({ salaryadvances, salaryadvanceofpays })
       })
   }
 
@@ -304,22 +304,22 @@ class ListSalaries extends React.Component {
 
   // START Add salary advance OF PAY
   addSalaryAdvanceofpay = () => {
-    let { salaryadvancesofpays } = this.state
-    salaryadvancesofpays.push({
+    let { salaryadvanceofpays } = this.state
+    salaryadvanceofpays.push({
       salary_id: 0,
       payment_id: 0,
       amount: '',
       edit: false
     })
-    this.setState({ salaryadvancesofpays })
+    this.setState({ salaryadvanceofpays })
   }
 
   selectPay = (pay, index) => {
-    let { salaryadvancesofpays } = this.state
+    let { salaryadvanceofpays } = this.state
 
     // Determinar que ese pago no este en esta lista
     if (
-      salaryadvancesofpays.findIndex(saop => saop.payment_id === pay.id) > -1
+      salaryadvanceofpays.findIndex(saop => saop.payment_id === pay.id) > -1
     ) {
       alert('No se puede seleccionar el mismo pago dos veces')
       return
@@ -328,9 +328,9 @@ class ListSalaries extends React.Component {
     // Determinar cuanto falta para el cobro total
     // Si supera el monto del salario del cruce, poner el parcial no mas
     let amount = pay.amount
-    salaryadvancesofpays[index].amount = amount
-    salaryadvancesofpays[index].payment_id = pay.id
-    this.setState({ salaryadvancesofpays })
+    salaryadvanceofpays[index].amount = amount
+    salaryadvanceofpays[index].payment_id = pay.id
+    this.setState({ salaryadvanceofpays })
 
     return true
   }
@@ -340,17 +340,17 @@ class ListSalaries extends React.Component {
     if (checked) {
       this.submitSalaryAdvanceofpays(index)
     } else {
-      let { salaryadvancesofpays } = this.state
-      salaryadvancesofpays[index][name] = checked
-      this.setState({ salaryadvancesofpays })
+      let { salaryadvanceofpays } = this.state
+      salaryadvanceofpays[index][name] = checked
+      this.setState({ salaryadvanceofpays })
     }
   }
 
   submitSalaryAdvanceofpays = index => {
     if (this.validateSalaryAdvanceOfPay(index)) {
       // Simple POST request with a JSON body using fetch
-      let { salaryadvancesofpays, salary_selected } = this.state
-      let salaryadvancesofpay = salaryadvancesofpays[index]
+      let { salaryadvanceofpays, salary_selected } = this.state
+      let salaryadvancesofpay = salaryadvanceofpays[index]
       salaryadvancesofpay.salary_id = salary_selected.id
 
       const requestOptions = {
@@ -362,11 +362,10 @@ class ListSalaries extends React.Component {
 
         fetch('https://ats.auditwhole.com/salaryadvanceofpays', requestOptions)
           .then(res => res.json())
-          .then(({ salaryadvancesofpay }) => {
-            let { salaryadvancesofpays } = this.state
-            salaryadvancesofpays[index].edit = true
-            salaryadvancesofpays[index].id = salaryadvancesofpay.id
-            this.setState({ salaryadvancesofpays })
+          .then(({ salaryadvanceofpay }) => {
+            salaryadvanceofpays[index].edit = true
+            salaryadvanceofpays[index].id = salaryadvanceofpay.id
+            this.setState({ salaryadvanceofpays })
           })
           .catch(() => {
             alert('Se produjo un error')
@@ -392,7 +391,7 @@ class ListSalaries extends React.Component {
   }
 
   validateSalaryAdvanceOfPay = index => {
-    let { payment_id, amount } = this.state.salaryadvancesofpays[index]
+    let { payment_id, amount } = this.state.salaryadvanceofpays[index]
 
     if (payment_id === 0) {
       alert('Seleccione el pago')
@@ -421,7 +420,7 @@ class ListSalaries extends React.Component {
       salary_selected,
       salaries,
       salaryadvances,
-      salaryadvancesofpays
+      salaryadvanceofpays
     } = this.state
     return (
       <Fragment>
@@ -533,7 +532,7 @@ class ListSalaries extends React.Component {
                 <SalaryItems
                   salary={salary_selected}
                   salaryadvances={salaryadvances}
-                  salaryadvancesofpays={salaryadvancesofpays}
+                  salaryadvanceofpays={salaryadvanceofpays}
                   type_salary={type_salary}
                   user_id={user.id}
                   addSalaryAdvance={this.addSalaryAdvance}

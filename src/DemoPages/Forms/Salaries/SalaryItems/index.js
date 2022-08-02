@@ -18,7 +18,7 @@ class SalaryItems extends React.Component {
       salary,
       user_id,
       salaryadvances,
-      salaryadvancesofpays,
+      salaryadvanceofpays,
       addSalaryAdvance,
       addSalaryAdvanceofpay,
       changeSalaryAdvance,
@@ -35,9 +35,17 @@ class SalaryItems extends React.Component {
     let { month, amount, balance, cheque, paid, amount_cheque } = salary
 
     let sum_salary_advance = Number(
-      salaryadvances
-        .reduce((sum, salaryadvance) => sum + Number(salaryadvance.amount), 0)
-        .toFixed(2)
+      salaryadvances.reduce(
+        (sum, salaryadvance) => sum + Number(salaryadvance.amount),
+        0
+      )
+    )
+
+    sum_salary_advance += Number(
+      salaryadvanceofpays.reduce(
+        (sum1, salaryadvanceofpay) => sum1 + Number(salaryadvanceofpay.amount),
+        0
+      )
     )
 
     return (
@@ -87,7 +95,7 @@ class SalaryItems extends React.Component {
                     </tr>
                   ) : null}
                   {salaryadvances.length > 0 ||
-                  salaryadvancesofpays.length > 0 ? (
+                  salaryadvanceofpays.length > 0 ? (
                     <tr>
                       <th>+</th>
                       <th>Anticipo</th>
@@ -97,23 +105,24 @@ class SalaryItems extends React.Component {
                   ) : null}
                 </thead>
                 <tbody>
-                  {salaryadvancesofpays.length > 0
-                    ? salaryadvancesofpays.map((salaryadvancesofpay, index) => (
+                  {salaryadvanceofpays.length > 0
+                    ? salaryadvanceofpays.map((salaryadvancesofpay, index) => (
                         <tr key={`salaryadvanceofpayrow${index}`}>
                           <td>{index + 1}</td>
                           <td>
                             {/* Cuando edit undefined O es editar entonces solo muestra texto */}
                             {/* Cuando es NO EDITAR entonces muestra el input porque esta negando el edit */}
-                            {salaryadvancesofpay.edit === undefined ||
-                            salaryadvancesofpay.edit ? (
-                              'ssofpay.description'
-                            ) : (
-                              <SelectPayOfCustom
-                                user_id={user_id}
-                                selectPay={selectPay}
-                                index={index}
-                              />
-                            )}
+                            <SelectPayOfCustom
+                              id={
+                                salaryadvancesofpay.id === undefined
+                                  ? null
+                                  : salaryadvancesofpay.id
+                              }
+                              user_id={user_id}
+                              selectPay={selectPay}
+                              index={index}
+                              salaryadvanceofpays={salaryadvanceofpays}
+                            />
                           </td>
                           <td style={{ 'text-align': 'right' }}>
                             {salaryadvancesofpay.edit === undefined ||
@@ -132,7 +141,7 @@ class SalaryItems extends React.Component {
                             <input
                               name='edit'
                               type='checkbox'
-                              class='custom-control-input'
+                              className='custom-control-input'
                               checked={
                                 salaryadvancesofpay.edit === undefined
                                   ? true
@@ -147,7 +156,9 @@ class SalaryItems extends React.Component {
                   {salaryadvances.length > 0
                     ? salaryadvances.map((salaryadvance, index) => (
                         <tr key={`salaryadvancerow${index}`}>
-                          <td className='text-center'>{index + 1}</td>
+                          <td className='text-center'>
+                            {salaryadvanceofpays.length + 1}
+                          </td>
                           <td>
                             {/* Cuando edit undefined O es editar entonces solo muestra texto */}
                             {/* Cuando es NO EDITAR entonces muestra el input porque esta negando el edit */}
@@ -179,7 +190,7 @@ class SalaryItems extends React.Component {
                             <input
                               name='edit'
                               type='checkbox'
-                              class='custom-control-input'
+                              className='custom-control-input'
                               checked={
                                 salaryadvance.edit === undefined
                                   ? true
