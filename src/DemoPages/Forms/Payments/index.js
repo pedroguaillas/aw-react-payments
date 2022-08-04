@@ -254,6 +254,7 @@ class Payments extends React.Component {
                       <DialogDelete
                         item_id={item_id}
                         deleteItem={this.deleteItem}
+                        title='pago'
                       />
                       <CardBody>
                         <Table striped size='sm' responsive>

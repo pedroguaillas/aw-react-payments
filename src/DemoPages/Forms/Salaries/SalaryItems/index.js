@@ -25,7 +25,10 @@ class SalaryItems extends React.Component {
       changeSalaryAdvanceAmount,
       checkAdvance,
       selectPay,
-      checkAdvanceofpays
+      changeSalaryAdvanceAmountOfPay,
+      checkAdvanceofpays,
+      deletesalaryadvance,
+      deletesalaryadvanceofpay
     } = this.props
 
     if (salary === null) {
@@ -35,17 +38,11 @@ class SalaryItems extends React.Component {
     let { month, amount, balance, cheque, paid, amount_cheque } = salary
 
     let sum_salary_advance = Number(
-      salaryadvances.reduce(
-        (sum, salaryadvance) => sum + Number(salaryadvance.amount),
-        0
-      )
+      salaryadvances.reduce((sum, sa) => sum + Number(sa.amount), 0)
     )
 
     sum_salary_advance += Number(
-      salaryadvanceofpays.reduce(
-        (sum1, salaryadvanceofpay) => sum1 + Number(salaryadvanceofpay.amount),
-        0
-      )
+      salaryadvanceofpays.reduce((sum1, saop) => sum1 + Number(saop.amount), 0)
     )
 
     return (
@@ -60,7 +57,7 @@ class SalaryItems extends React.Component {
                     <Button
                       title='Agregar anticipo'
                       onClick={e => addSalaryAdvance()}
-                      className='btn btn-primary mr-2'
+                      className='btn btn-primary me-1'
                     >
                       +
                     </Button>
@@ -100,23 +97,24 @@ class SalaryItems extends React.Component {
                       <th>+</th>
                       <th>Anticipo</th>
                       <th>Monto</th>
-                      <th style={{ width: '2em' }}></th>
+                      <th style={{ width: '3em' }}></th>
                     </tr>
                   ) : null}
                 </thead>
                 <tbody>
                   {salaryadvanceofpays.length > 0
-                    ? salaryadvanceofpays.map((salaryadvancesofpay, index) => (
+                    ? salaryadvanceofpays.map((salaryadvanceofpay, index) => (
                         <tr key={`salaryadvanceofpayrow${index}`}>
                           <td>{index + 1}</td>
                           <td>
                             {/* Cuando edit undefined O es editar entonces solo muestra texto */}
                             {/* Cuando es NO EDITAR entonces muestra el input porque esta negando el edit */}
                             <SelectPayOfCustom
+                              // key={`salaryadvanceofpay${index}`}
                               id={
-                                salaryadvancesofpay.id === undefined
+                                salaryadvanceofpay.id === undefined
                                   ? null
-                                  : salaryadvancesofpay.id
+                                  : salaryadvanceofpay.id
                               }
                               user_id={user_id}
                               selectPay={selectPay}
@@ -125,30 +123,42 @@ class SalaryItems extends React.Component {
                             />
                           </td>
                           <td style={{ 'text-align': 'right' }}>
-                            {salaryadvancesofpay.edit === undefined ||
-                            salaryadvancesofpay.edit ? (
-                              salaryadvancesofpay.amount
+                            {salaryadvanceofpay.edit === undefined ||
+                            salaryadvanceofpay.edit ? (
+                              salaryadvanceofpay.amount
                             ) : (
                               <Input
                                 name='amount'
-                                onChange={changeSalaryAdvanceAmount(index)}
-                                value={salaryadvancesofpay.amount}
+                                onChange={changeSalaryAdvanceAmountOfPay(index)}
+                                value={salaryadvanceofpay.amount}
                                 style={{ width: '6em', 'text-align': 'right' }}
                               />
                             )}
                           </td>
                           <td className='text-center'>
-                            <input
-                              name='edit'
-                              type='checkbox'
-                              className='custom-control-input'
-                              checked={
-                                salaryadvancesofpay.edit === undefined
-                                  ? true
-                                  : salaryadvancesofpay.edit
-                              }
-                              onChange={checkAdvanceofpays(index)}
-                            />
+                            <ButtonGroup size='sm'>
+                              <input
+                                id={`checkbox${index}`}
+                                name='edit'
+                                type='checkbox'
+                                className='custom-control-input me-2'
+                                checked={
+                                  salaryadvanceofpay.edit === undefined
+                                    ? true
+                                    : salaryadvanceofpay.edit
+                                }
+                                onChange={checkAdvanceofpays(index)}
+                              />
+                              <div
+                                onClick={() =>
+                                  deletesalaryadvanceofpay(salaryadvanceofpay)
+                                }
+                                style={{ cursor: 'pointer' }}
+                                className='text-danger'
+                              >
+                                <i className='lnr-cross-circle'></i>
+                              </div>
+                            </ButtonGroup>
                           </td>
                         </tr>
                       ))
@@ -157,7 +167,7 @@ class SalaryItems extends React.Component {
                     ? salaryadvances.map((salaryadvance, index) => (
                         <tr key={`salaryadvancerow${index}`}>
                           <td className='text-center'>
-                            {salaryadvanceofpays.length + 1}
+                            {salaryadvanceofpays.length + index + 1}
                           </td>
                           <td>
                             {/* Cuando edit undefined O es editar entonces solo muestra texto */}
@@ -187,17 +197,30 @@ class SalaryItems extends React.Component {
                             )}
                           </td>
                           <td className='text-center'>
-                            <input
-                              name='edit'
-                              type='checkbox'
-                              className='custom-control-input'
-                              checked={
-                                salaryadvance.edit === undefined
-                                  ? true
-                                  : salaryadvance.edit
-                              }
-                              onChange={checkAdvance(index)}
-                            />
+                            <ButtonGroup size='sm'>
+                              <input
+                                id={`checkbox${salaryadvanceofpays.length +
+                                  index}`}
+                                name='edit'
+                                type='checkbox'
+                                className='custom-control-input me-2'
+                                checked={
+                                  salaryadvance.edit === undefined
+                                    ? true
+                                    : salaryadvance.edit
+                                }
+                                onChange={checkAdvance(index)}
+                              />
+                              <div
+                                onClick={() =>
+                                  deletesalaryadvance(salaryadvance)
+                                }
+                                style={{ cursor: 'pointer' }}
+                                className='text-danger'
+                              >
+                                <i className='lnr-cross-circle'></i>
+                              </div>
+                            </ButtonGroup>
                           </td>
                         </tr>
                       ))

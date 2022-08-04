@@ -34,15 +34,15 @@ class DialogDelete extends React.Component {
         className={this.props.className}
       >
         <ModalBody>
-          <div className='text-center'>
+          <div className='text-center text-danger'>
             <i
               style={{ 'font-size': '3.5rem' }}
-              className='lnr-cross-circle icon-gradient bg-love-kiss'
+              className='lnr-cross-circle'
             ></i>
           </div>
           <br />
           <h4 style={{ 'text-align': 'center' }}>
-            Esta seguro eliminar el pago!
+            Esta seguro eliminar el {this.props.title}!
           </h4>
         </ModalBody>
         <ModalFooter>

@@ -95,7 +95,9 @@ class SelectPayOfCustom extends Component {
             <Col>
               <InputGroup>
                 <Input value={item} placeholder='Cliente - Mes' disabled />
-                <Button onClick={this.showModal}>Seleccionar pago</Button>
+                <Button color='success' onClick={this.showModal}>
+                  <i className='pe-7s-search'> </i>
+                </Button>
               </InputGroup>
             </Col>
           </Row>
@@ -119,7 +121,7 @@ class SelectPayOfCustom extends Component {
                       {/* <th style={{ width: '2em' }}></th> */}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody style={{ cursor: 'pointer' }}>
                     {customers.map((customer, index) => (
                       <tr
                         key={`customer${index}`}
@@ -158,7 +160,7 @@ class SelectPayOfCustom extends Component {
                         <th>Monto</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody style={{ cursor: 'pointer' }}>
                       {payments.map((payment, index) => (
                         <tr
                           onClick={() => this.onSelectPay(payment)}

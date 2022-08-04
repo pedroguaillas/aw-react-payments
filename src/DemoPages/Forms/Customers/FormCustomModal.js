@@ -50,7 +50,8 @@ class FormCustomModal extends Component {
         this.props.users.length === 1
       ) {
         this.setState((state, props) => ({
-          item: props.users[0].atts.name
+          item: props.users[0].atts.name,
+          suggestions: []
         }))
       } else {
         let { users, suggestions } = this.state

@@ -1,11 +1,12 @@
 import React, { Fragment } from 'react'
-import { Row, Col, Card, CardBody, Table, Button } from 'reactstrap'
+import { Row, Col, Card, CardBody, Table } from 'reactstrap'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import SalaryItems from './SalaryItems'
 import FormSalaryModal from './FormSalaryModal'
 import { months } from '../PaymentHelpers'
+import DialogDelete from '../../Components/DialogDelete'
 
 class ListSalaries extends React.Component {
   state = {
@@ -16,7 +17,9 @@ class ListSalaries extends React.Component {
     modal: false,
     salaryadvances: [],
     salaryadvanceofpays: [],
-    type_salary: 'anticipo'
+    type_salary: 'anticipo',
+    item_id: 0,
+    item_id_of_pay: 0
   }
 
   componentDidMount () {
@@ -152,23 +155,23 @@ class ListSalaries extends React.Component {
             alert('Ya existe un cobro de ese mes')
           })
       } else {
-        document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'PUT'
-        fetch(
-          'https://ats.auditwhole.com/salaries/' + salary.id,
-          requestOptions
-        )
-          .then(res => res.json())
-          .then(salary => {
-            let { salaries } = this.state
-            var index = salaries.findIndex(e => e.id === salary.id)
-            salaries[index] = salary
-            this.setState({
-              modal: false,
-              salaries
-            })
-            document.getElementById('btn-save').disabled = false
-          })
+        // document.getElementById('btn-save').disabled = true
+        // requestOptions.method = 'PUT'
+        // fetch(
+        //   'https://ats.auditwhole.com/salaries/' + salary.id,
+        //   requestOptions
+        // )
+        //   .then(res => res.json())
+        //   .then(salary => {
+        //     let { salaries } = this.state
+        //     var index = salaries.findIndex(e => e.id === salary.id)
+        //     salaries[index] = salary
+        //     this.setState({
+        //       modal: false,
+        //       salaries
+        //     })
+        //     document.getElementById('btn-save').disabled = false
+        //   })
       }
     }
   }
@@ -202,9 +205,11 @@ class ListSalaries extends React.Component {
 
   // START Add salary advance
   addSalaryAdvance = () => {
-    let { salaryadvances } = this.state
-    salaryadvances.push({ description: '', amount: '', edit: false })
-    this.setState({ salaryadvances })
+    if (this.enableAdvance()) {
+      let { salaryadvances } = this.state
+      salaryadvances.push({ description: '', amount: '', edit: false })
+      this.setState({ salaryadvances })
+    }
   }
 
   changeSalaryAdvance = index => e => {
@@ -228,7 +233,7 @@ class ListSalaries extends React.Component {
     let { name, checked } = e.target
     if (checked) {
       this.submitSalaryAdvance(index)
-    } else {
+    } else if (this.enableAdvance()) {
       let { salaryadvances } = this.state
       salaryadvances[index][name] = checked
       this.setState({ salaryadvances })
@@ -238,7 +243,12 @@ class ListSalaries extends React.Component {
   submitSalaryAdvance = index => {
     if (this.validateSalaryAdvance(index)) {
       // Simple POST request with a JSON body using fetch
-      let { salaryadvances, salary_selected } = this.state
+      let {
+        salaryadvances,
+        salaryadvanceofpays,
+        salaries,
+        salary_selected
+      } = this.state
       let salaryadvance = salaryadvances[index]
       salaryadvance.salary_id = salary_selected.id
 
@@ -248,35 +258,79 @@ class ListSalaries extends React.Component {
       }
       if (salaryadvance.id === undefined) {
         requestOptions.method = 'POST'
+        // Desabilitar el Checkbox
+        document.getElementById(
+          'checkbox' + (salaryadvanceofpays.length + index)
+        ).disabled = true
 
         fetch('https://ats.auditwhole.com/salaryadvances', requestOptions)
-          .then(response => response.json())
-          .then(() => {
-            let { salaryadvances } = this.state
+          .then(res => res.json())
+          .then(({ salaryadvance }) => {
+            // Habilitar el Checkbox
+            document.getElementById(
+              'checkbox' + (salaryadvanceofpays.length + index)
+            ).disabled = false
+            // Poner el anticipo guardado
             salaryadvances[index].edit = true
-            this.setState({ salaryadvances })
+            // Agregar el atributo id
+            salaryadvances[index].id = salaryadvance.id
+            // sumar el atributo paid el monto del salaryadvance
+            let fi = salaries.findIndex(s => s.id === salary_selected.id)
+            salaries[fi].paid += Number(salaryadvance.amount)
+            this.setState({ salaries, salaryadvances })
           })
           .catch(() => {
             alert('Se produjo un error')
           })
       } else {
         requestOptions.method = 'PUT'
+        // Desabilitar el Checkbox
+        document.getElementById(
+          'checkbox' + (salaryadvanceofpays.length + index)
+        ).disabled = true
 
         fetch(
           'https://ats.auditwhole.com/salaryadvances/' + salaryadvance.id,
           requestOptions
         )
-          .then(response => response.json())
-          .then(res => {
-            let { salaryadvances } = this.state
+          .then(res => res.json())
+          .then(({ salaryadvance }) => {
+            // Habilitar el Checkbox
+            document.getElementById(
+              'checkbox' + (salaryadvanceofpays.length + index)
+            ).disabled = false
+            // Poner el anticipo guardado
             salaryadvances[index].edit = true
             this.setState({ salaryadvances })
+            // Volver a calcular el pagado
+            this.recalculatePaid()
           })
           .catch(() => {
             alert('Se produjo un error')
           })
       }
     }
+  }
+
+  // Volver a calcular el PAID cuando se edita o elimina un anticipo
+  recalculatePaid = () => {
+    let {
+      salaries,
+      salary_selected,
+      salaryadvances,
+      salaryadvanceofpays
+    } = this.state
+
+    let sum = Number(salaryadvances.reduce((s, sa) => s + Number(sa.amount), 0))
+    sum += salaryadvanceofpays.reduce((s1, sdop) => s1 + Number(sdop.amount), 0)
+
+    let is = salaries.findIndex(s => s.id === salary_selected.id)
+
+    sum = Number(sum.toFixed(2))
+    salaries[is].paid = sum
+    salary_selected.paid = sum
+
+    this.setState({ salaries, salary_selected })
   }
 
   validateSalaryAdvance = index => {
@@ -300,18 +354,48 @@ class ListSalaries extends React.Component {
     return true
   }
 
+  deletesalaryadvance = item => {
+    // 1. Si el item no tiene id borrar directo
+    if (item.id === undefined) {
+      let { salaryadvances } = this.state
+      salaryadvances = salaryadvances.filter(s => s.id !== undefined)
+      this.setState({ salaryadvances })
+    }
+
+    // 2. Si el item tiene id Mostrar DialogDelete
+    if (this.enableAdvance()) {
+      this.setState({ item_id: item.id })
+    }
+  }
+
+  deleteItem = id => {
+    fetch('https://ats.auditwhole.com/salaryadvances/' + id, {
+      method: 'DELETE'
+    }).then(() => {
+      let { salaryadvances } = this.state
+      salaryadvances = salaryadvances.filter(e => e.id !== id)
+      this.setState({
+        salaryadvances,
+        item_id: 0
+      })
+      this.recalculatePaid()
+    })
+  }
+
   // END Add salary advance
 
   // START Add salary advance OF PAY
   addSalaryAdvanceofpay = () => {
-    let { salaryadvanceofpays } = this.state
-    salaryadvanceofpays.push({
-      salary_id: 0,
-      payment_id: 0,
-      amount: '',
-      edit: false
-    })
-    this.setState({ salaryadvanceofpays })
+    if (this.enableAdvance()) {
+      let { salaryadvanceofpays } = this.state
+      salaryadvanceofpays.push({
+        salary_id: 0,
+        payment_id: 0,
+        amount: '',
+        edit: false
+      })
+      this.setState({ salaryadvanceofpays })
+    }
   }
 
   selectPay = (pay, index) => {
@@ -335,6 +419,16 @@ class ListSalaries extends React.Component {
     return true
   }
 
+  changeSalaryAdvanceAmountOfPay = index => e => {
+    let { name, value } = e.target
+    if (isNaN(value)) {
+      return
+    }
+    let { salaryadvanceofpays } = this.state
+    salaryadvanceofpays[index][name] = value
+    this.setState({ salaryadvanceofpays })
+  }
+
   checkAdvanceofpays = index => e => {
     let { name, checked } = e.target
     if (checked) {
@@ -349,43 +443,59 @@ class ListSalaries extends React.Component {
   submitSalaryAdvanceofpays = index => {
     if (this.validateSalaryAdvanceOfPay(index)) {
       // Simple POST request with a JSON body using fetch
-      let { salaryadvanceofpays, salary_selected } = this.state
-      let salaryadvancesofpay = salaryadvanceofpays[index]
-      salaryadvancesofpay.salary_id = salary_selected.id
+      let { salaryadvanceofpays, salaries, salary_selected } = this.state
+      let salaryadvanceofpay = salaryadvanceofpays[index]
+      salaryadvanceofpay.salary_id = salary_selected.id
 
       const requestOptions = {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salaryadvancesofpay)
+        body: JSON.stringify(salaryadvanceofpay)
       }
-      if (salaryadvancesofpay.id === undefined) {
+      if (salaryadvanceofpay.id === undefined) {
         requestOptions.method = 'POST'
+        // Desabilitar el Checkbox
+        document.getElementById('checkbox' + index).disabled = true
 
         fetch('https://ats.auditwhole.com/salaryadvanceofpays', requestOptions)
           .then(res => res.json())
           .then(({ salaryadvanceofpay }) => {
+            // Habilitar el Checkbox
+            document.getElementById('checkbox' + index).disabled = false
+            // Poner el anticipo guardado
             salaryadvanceofpays[index].edit = true
+            // Agregar el atributo id
             salaryadvanceofpays[index].id = salaryadvanceofpay.id
-            this.setState({ salaryadvanceofpays })
+            // sumar el atributo paid de salarios el monto del salaryadvanceofpay
+            let fi = salaries.findIndex(s => s.id === salary_selected.id)
+            salaries[fi].paid += Number(salaryadvanceofpay.amount)
+            this.setState({ salaries, salaryadvanceofpays })
           })
           .catch(() => {
             alert('Se produjo un error')
           })
       } else {
         requestOptions.method = 'PUT'
+        // Desabilitar el Checkbox
+        document.getElementById('checkbox' + index).disabled = true
 
-        // fetch(
-        //   'https://ats.auditwhole.com/salaryadvances/' + salaryadvancesofpay.id,
-        //   requestOptions
-        // )
-        //   .then(res => res.json())
-        //   .then(res => {
-        //     let { salaryadvances } = this.state
-        //     salaryadvances[index].edit = true
-        //     this.setState({ salaryadvances })
-        //   })
-        //   .catch(() => {
-        //     alert('Se produjo un error')
-        //   })
+        fetch(
+          'https://ats.auditwhole.com/salaryadvanceofpays/' +
+            salaryadvanceofpay.id,
+          requestOptions
+        )
+          .then(res => res.json())
+          .then(({ salaryadvance }) => {
+            // Habilitar el Checkbox
+            document.getElementById('checkbox' + index).disabled = false
+            // Poner el anticipo guardado
+            salaryadvanceofpays[index].edit = true
+            this.setState({ salaryadvanceofpays })
+            // Volver a calcular el pagado
+            this.recalculatePaid()
+          })
+          .catch(() => {
+            alert('Se produjo un error')
+          })
       }
     }
   }
@@ -411,6 +521,53 @@ class ListSalaries extends React.Component {
     return true
   }
 
+  // Verificar si algun anticipo esta habilitado para editar
+  enableAdvance = () => {
+    let { salaryadvances, salaryadvanceofpays } = this.state
+    let en = salaryadvances.findIndex(sa => sa.edit !== undefined && !sa.edit)
+    let enop = salaryadvanceofpays.findIndex(
+      saop => saop.edit !== undefined && !saop.edit
+    )
+    if (en > -1 || enop > -1) {
+      alert('No puede estar un anticipo en edición')
+      return
+    } else {
+      return true
+    }
+  }
+
+  deletesalaryadvanceofpay = item => {
+    // 1. Si el item no tiene id borrar directo
+    if (item.id === undefined) {
+      let { salaryadvanceofpays } = this.state
+      salaryadvanceofpays = salaryadvanceofpays.filter(s => s.id !== undefined)
+      this.setState({ salaryadvanceofpays })
+    }
+
+    // 2. Si el item tiene id Mostrar DialogDelete
+    if (this.enableAdvance()) {
+      this.setState({ item_id_of_pay: item.id })
+    }
+  }
+
+  deleteItemOfPay = id => {
+    fetch('https://ats.auditwhole.com/salaryadvanceofpays/' + id, {
+      method: 'DELETE'
+    }).then(() => {
+      let { salaryadvanceofpays } = this.state
+      salaryadvanceofpays = salaryadvanceofpays.filter(e => e.id !== id)
+      this.setState({
+        salaryadvanceofpays,
+        item_id_of_pay: 0
+      })
+      this.recalculatePaid()
+    })
+  }
+
+  // Completar pago con cheque o efectivo
+  // Para completar el pago verificar los anticipos no esten en edicion
+  // Agregar la columna efectivo por defecto 0
+
   render () {
     let {
       type_salary,
@@ -420,7 +577,9 @@ class ListSalaries extends React.Component {
       salary_selected,
       salaries,
       salaryadvances,
-      salaryadvanceofpays
+      salaryadvanceofpays,
+      item_id,
+      item_id_of_pay
     } = this.state
     return (
       <Fragment>
@@ -439,6 +598,15 @@ class ListSalaries extends React.Component {
             exit={false}
           >
             <div>
+              <DialogDelete
+                item_id={item_id > item_id_of_pay ? item_id : item_id_of_pay}
+                deleteItem={
+                  item_id > item_id_of_pay
+                    ? this.deleteItem
+                    : this.deleteItemOfPay
+                }
+                title='anticipo'
+              />
               <FormSalaryModal
                 type_salary={type_salary}
                 modal={modal}
@@ -541,7 +709,12 @@ class ListSalaries extends React.Component {
                   changeSalaryAdvanceAmount={this.changeSalaryAdvanceAmount}
                   checkAdvance={this.checkAdvance}
                   selectPay={this.selectPay}
+                  changeSalaryAdvanceAmountOfPay={
+                    this.changeSalaryAdvanceAmountOfPay
+                  }
                   checkAdvanceofpays={this.checkAdvanceofpays}
+                  deletesalaryadvance={this.deletesalaryadvance}
+                  deletesalaryadvanceofpay={this.deletesalaryadvanceofpay}
                 />
               </Row>
             </div>
