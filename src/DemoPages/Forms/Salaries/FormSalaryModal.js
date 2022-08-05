@@ -6,12 +6,12 @@ import {
   ModalBody,
   Input,
   Form,
-  Row,
   Col,
   FormGroup,
   Label,
   ModalFooter
 } from 'reactstrap'
+import { months } from './../PaymentHelpers'
 
 class FormSalaryModal extends Component {
   render = () => {
@@ -23,7 +23,8 @@ class FormSalaryModal extends Component {
       onChange,
       onChangeNumber,
       onCheck,
-      submit
+      submit,
+      complete
     } = this.props
     return (
       <Fragment>
@@ -33,14 +34,11 @@ class FormSalaryModal extends Component {
           className={this.props.className}
           size={this.props.size}
         >
-          <ModalHeader toggle={toggle}>Registrar salario</ModalHeader>
+          <ModalHeader toggle={toggle}>
+            {complete ? 'Completar' : 'Registrar'} salario
+          </ModalHeader>
           <ModalBody>
             <Form className='text-right'>
-              <Row form>
-                <p className='mt-2'>
-                  <strong>Nota:</strong> Todos los campos son obligatorios
-                </p>
-              </Row>
               <FormGroup className='mb-1' row>
                 <Label for='amount' sm={2}>
                   Sueldo
@@ -51,7 +49,7 @@ class FormSalaryModal extends Component {
                 <Label for='month' sm={2}>
                   Mes
                 </Label>
-                <Col sm={6}>
+                <Col sm={6} hidden={complete}>
                   <Input
                     type='month'
                     onChange={onChange}
@@ -60,12 +58,23 @@ class FormSalaryModal extends Component {
                     name='month'
                   />
                 </Col>
+                {complete ? (
+                  <Label for='month' sm={4}>
+                    {`${
+                      months[salary.month.substring(5) - 1].description
+                    } del ${salary.month.substring(0, 4)}`}
+                  </Label>
+                ) : null}
               </FormGroup>
-              <FormGroup className='mb-1' row>
+              <FormGroup
+                className='mb-1'
+                row
+                hidden={complete && salary.balance === 0}
+              >
                 <Label for='balance' sm={2}>
                   Saldo
                 </Label>
-                <Col sm={6}>
+                <Col sm={6} hidden={complete}>
                   <Input
                     onChange={onChangeNumber}
                     value={salary.balance}
@@ -73,11 +82,16 @@ class FormSalaryModal extends Component {
                     name='balance'
                   />
                 </Col>
+                {complete ? (
+                  <Label for='balance' sm={2}>
+                    {salary.balance}
+                  </Label>
+                ) : null}
               </FormGroup>
               <FormGroup row>
                 <Label sm={2} />
                 <div className='col' sm={6}>
-                  <FormGroup check>
+                  <FormGroup check hidden={complete}>
                     <Input
                       id='radio1'
                       type='radio'
@@ -97,11 +111,23 @@ class FormSalaryModal extends Component {
                     />
                     <Label check>Cheque</Label>
                   </FormGroup>
+                  <FormGroup check>
+                    <Input
+                      id='radio3'
+                      type='radio'
+                      value='efectivo'
+                      checked={type_salary === 'efectivo'}
+                      onChange={onCheck}
+                    />
+                    <Label check>Efectivo</Label>
+                  </FormGroup>
                 </div>
               </FormGroup>
               <FormGroup
                 className='mb-1'
-                hidden={type_salary === 'anticipo'}
+                hidden={
+                  type_salary === 'anticipo' || type_salary === 'efectivo'
+                }
                 row
               >
                 <Label sm={2} for='cheque'>
@@ -113,7 +139,7 @@ class FormSalaryModal extends Component {
                     bsSize='sm'
                     name='cheque'
                     value={salary.cheque}
-                    maxLength={30}
+                    maxLength={10}
                   />
                 </Col>
               </FormGroup>

@@ -19,7 +19,8 @@ class ListSalaries extends React.Component {
     salaryadvanceofpays: [],
     type_salary: 'anticipo',
     item_id: 0,
-    item_id_of_pay: 0
+    item_id_of_pay: 0,
+    complete: false
   }
 
   componentDidMount () {
@@ -102,23 +103,33 @@ class ListSalaries extends React.Component {
     }
     this.setState(state => ({
       salary,
-      modal: !state.modal
+      type_salary: 'anticipo',
+      modal: !state.modal,
+      complete: false
     }))
   }
 
   submitSaveSalary = () => {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
-      let { type_salary, salary } = this.state
+      let { type_salary, salary, salaries } = this.state
 
       if (salary.balance === '') {
         salary.balance = 0
       }
 
+      // amount_cheque no es neceario inicializar porque su valor por defecto es cero
       if (type_salary === 'cheque') {
-        salary.amount_cheque = salary.amount - salary.balance
-      } else {
-        // Se elimina el atributo porque se iria con ''
+        salary.amount_cheque = salary.amount - salary.balance - salary.paid
+      }
+
+      // cash no es neceario inicializar porque su valor por defecto es cero
+      if (type_salary === 'efectivo') {
+        salary.cash = salary.amount - salary.balance - salary.paid
+      }
+
+      // Se elimina el atributo cheque porque se iria con ''
+      if (type_salary === 'anticipo' || type_salary === 'efectivo') {
         delete salary.cheque
       }
 
@@ -134,7 +145,6 @@ class ListSalaries extends React.Component {
           .then(res => res.json())
           .then(({ salary }) => {
             salary.paid = 0
-            let { salaries } = this.state
             salary.balance =
               salary.balance === undefined ? 0 : Number(salary.balance)
             if (salary.cheque === undefined) {
@@ -144,10 +154,15 @@ class ListSalaries extends React.Component {
               salary.amount_cheque === undefined
                 ? 0
                 : Number(salary.amount_cheque)
+
+            salary.cash = salary.cash === undefined ? 0 : Number(salary.cash)
             salaries.unshift(salary)
             this.setState({
               modal: false,
-              salaries
+              salaries,
+              salary_selected: salary,
+              salaryadvances: [],
+              salaryadvanceofpays: []
             })
             document.getElementById('btn-save').disabled = false
           })
@@ -155,23 +170,26 @@ class ListSalaries extends React.Component {
             alert('Ya existe un cobro de ese mes')
           })
       } else {
-        // document.getElementById('btn-save').disabled = true
-        // requestOptions.method = 'PUT'
-        // fetch(
-        //   'https://ats.auditwhole.com/salaries/' + salary.id,
-        //   requestOptions
-        // )
-        //   .then(res => res.json())
-        //   .then(salary => {
-        //     let { salaries } = this.state
-        //     var index = salaries.findIndex(e => e.id === salary.id)
-        //     salaries[index] = salary
-        //     this.setState({
-        //       modal: false,
-        //       salaries
-        //     })
-        //     document.getElementById('btn-save').disabled = false
-        //   })
+        document.getElementById('btn-save').disabled = true
+        requestOptions.method = 'PUT'
+
+        // Modifico antes porque por que si guarda
+        var index = salaries.findIndex(e => e.id === salary.id)
+        salaries[index] = salary
+
+        fetch(
+          'https://ats.auditwhole.com/salaries/' + salary.id,
+          requestOptions
+        )
+          .then(res => res.json())
+          .then(({}) => {
+            this.setState({
+              modal: false,
+              salaries,
+              salary_selected: salary
+            })
+            document.getElementById('btn-save').disabled = false
+          })
       }
     }
   }
@@ -180,7 +198,7 @@ class ListSalaries extends React.Component {
     let { type_salary, salary } = this.state
 
     if (type_salary === 'cheque') {
-      if (salary.cheque === '') {
+      if (salary.cheque === '' || salary.cheque === null) {
         alert('Debe llenar el numero de cheque')
         return
       }
@@ -564,9 +582,14 @@ class ListSalaries extends React.Component {
     })
   }
 
-  // Completar pago con cheque o efectivo
-  // Para completar el pago verificar los anticipos no esten en edicion
-  // Agregar la columna efectivo por defecto 0
+  completePay = () => {
+    this.setState(state => ({
+      complete: true,
+      modal: !state.modal,
+      type_salary: 'cheque',
+      salary: state.salary_selected
+    }))
+  }
 
   render () {
     let {
@@ -579,7 +602,8 @@ class ListSalaries extends React.Component {
       salaryadvances,
       salaryadvanceofpays,
       item_id,
-      item_id_of_pay
+      item_id_of_pay,
+      complete
     } = this.state
     return (
       <Fragment>
@@ -610,12 +634,13 @@ class ListSalaries extends React.Component {
               <FormSalaryModal
                 type_salary={type_salary}
                 modal={modal}
-                salary={salary}
                 toggle={this.toggle}
-                onCheck={this.onCheck}
+                salary={salary}
                 onChange={this.onChange}
                 onChangeNumber={this.onChangeNumber}
+                onCheck={this.onCheck}
                 submit={this.submitSaveSalary}
+                complete={complete}
               />
               <Row>
                 <Col lg={5}>
@@ -640,7 +665,7 @@ class ListSalaries extends React.Component {
                             <th>Mes</th>
                             <th>Sueldo</th>
                             <th>Cobrado</th>
-                            <th>Faltante</th>
+                            <th>A cobrar</th>
                             {/* <th style={{ width: '2em' }}></th> */}
                           </tr>
                         </thead>
@@ -669,7 +694,8 @@ class ListSalaries extends React.Component {
                                     {(
                                       salary.balance +
                                       salary.amount_cheque +
-                                      salary.paid
+                                      salary.paid +
+                                      salary.cash
                                     ).toFixed(2)}
                                   </td>
                                   <td>
@@ -677,7 +703,8 @@ class ListSalaries extends React.Component {
                                       salary.amount -
                                       salary.balance -
                                       salary.amount_cheque -
-                                      salary.paid
+                                      salary.paid -
+                                      salary.cash
                                     ).toFixed(2)}
                                   </td>
                                   {/* <td>
@@ -715,6 +742,7 @@ class ListSalaries extends React.Component {
                   checkAdvanceofpays={this.checkAdvanceofpays}
                   deletesalaryadvance={this.deletesalaryadvance}
                   deletesalaryadvanceofpay={this.deletesalaryadvanceofpay}
+                  completePay={this.completePay}
                 />
               </Row>
             </div>

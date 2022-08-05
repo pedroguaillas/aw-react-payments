@@ -28,14 +28,15 @@ class SalaryItems extends React.Component {
       changeSalaryAdvanceAmountOfPay,
       checkAdvanceofpays,
       deletesalaryadvance,
-      deletesalaryadvanceofpay
+      deletesalaryadvanceofpay,
+      completePay
     } = this.props
 
     if (salary === null) {
       return null
     }
 
-    let { month, amount, balance, cheque, paid, amount_cheque } = salary
+    let { month, amount, balance, cheque, paid, amount_cheque, cash } = salary
 
     let sum_salary_advance = Number(
       salaryadvances.reduce((sum, sa) => sum + Number(sa.amount), 0)
@@ -51,7 +52,7 @@ class SalaryItems extends React.Component {
           <Card className='main-card'>
             <div className='card-header'>
               {`PAGOS ${months[month.substring(5) - 1].description}`}
-              {cheque === null && paid + balance < amount ? (
+              {cheque === null && paid + balance + cash < amount ? (
                 <div className='btn-actions-pane-right'>
                   <ButtonGroup>
                     <Button
@@ -77,17 +78,13 @@ class SalaryItems extends React.Component {
                 <thead>
                   <tr>
                     <th colSpan={2}>SUELDO</th>
-                    <th style={{ 'text-align': 'right' }}>
-                      {amount.toFixed(2)}
-                    </th>
+                    <th style={{ 'text-align': 'right' }}>{amount}</th>
                     <th></th>
                   </tr>
                   {balance > 0 ? (
                     <tr>
                       <td colSpan={2}>Saldo mes anterior</td>
-                      <td style={{ 'text-align': 'right' }}>
-                        {balance.toFixed(2)}
-                      </td>
+                      <td style={{ 'text-align': 'right' }}>{balance}</td>
                       <th></th>
                     </tr>
                   ) : null}
@@ -241,18 +238,29 @@ class SalaryItems extends React.Component {
                   {amount_cheque > 0 ? (
                     <tr className='text-center'>
                       <td colSpan={2}>Pagado segun cheque # {cheque}</td>
-                      <td style={{ 'text-align': 'right' }}>
-                        {amount_cheque.toFixed(2)}
-                      </td>
+                      <td style={{ 'text-align': 'right' }}>{amount_cheque}</td>
+                      <th></th>
+                    </tr>
+                  ) : null}
+                  {/* Mostrar si solo hay pago en efectivo */}
+                  {cash > 0 ? (
+                    <tr className='text-center'>
+                      <td colSpan={2}>Pagado en efectivo</td>
+                      <td style={{ 'text-align': 'right' }}>{cash}</td>
                       <th></th>
                     </tr>
                   ) : null}
                   {/* Mostrar si no hay pago con cheque y falta ajustar el monto de pago */}
                   {/* No le sumo el monto del cheque porque asumimos que es CERO */}
-                  {amount > sum_salary_advance + balance + amount_cheque ? (
+                  {amount >
+                  sum_salary_advance + balance + amount_cheque + cash ? (
                     <tr className='text-center'>
                       <td colSpan={2}>
-                        <Button className='font-icon-sm py-0' color='success'>
+                        <Button
+                          onClick={completePay}
+                          className='font-icon-sm py-0'
+                          color='success'
+                        >
                           Completar Pago
                         </Button>
                       </td>
@@ -261,7 +269,8 @@ class SalaryItems extends React.Component {
                           amount -
                           sum_salary_advance -
                           balance +
-                          amount_cheque
+                          amount_cheque +
+                          cash
                         ).toFixed(2)}
                       </td>
                       <th></th>
