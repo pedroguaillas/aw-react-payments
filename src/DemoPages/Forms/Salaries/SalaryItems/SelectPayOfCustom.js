@@ -30,9 +30,9 @@ class SelectPayOfCustom extends Component {
           )
         : null
     if (items !== null && items.length > 0) {
-      let { razonsocial, month } = items[0]
+      let { razonsocial, month, amount } = items[0]
       this.setState({
-        item: `${razonsocial} - ${months[month - 1].description}`
+        item: `${razonsocial} - ${months[month - 1].description} - ${amount}`
       })
     }
   }
@@ -80,7 +80,7 @@ class SelectPayOfCustom extends Component {
     if (selectPay(pay, index)) {
       let item = `${customer_selected.razonsocial} - ${
         months[pay.month - 1].description
-      }`
+      } - ${pay.amount}`
 
       this.setState(state => ({ item, modal: !state.modal }))
     }
@@ -94,7 +94,11 @@ class SelectPayOfCustom extends Component {
           <Row key={123}>
             <Col>
               <InputGroup>
-                <Input value={item} placeholder='Cliente - Mes' disabled />
+                <Input
+                  value={item}
+                  placeholder='Cliente - Mes - Monto'
+                  disabled
+                />
                 <Button color='success' onClick={this.showModal}>
                   <i className='pe-7s-search'> </i>
                 </Button>

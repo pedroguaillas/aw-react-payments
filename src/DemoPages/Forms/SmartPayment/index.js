@@ -145,6 +145,24 @@ class SmartPayment extends React.Component {
     return true
   }
 
+  viewPdf = () => {
+    const {
+      match: { params }
+    } = this.props
+    fetch('https://ats.auditwhole.com/customerpdf/' + params.id, {
+      responseType: 'blob'
+    })
+      .then(res => res.blob())
+      .then(pdf => {
+        //Create a Blob from the PDF Stream
+        const file = new Blob([pdf], { type: 'application/pdf' })
+        //Build a URL from the file
+        const fileURL = URL.createObjectURL(file)
+        //Open the URL on new Window
+        window.open(fileURL)
+      })
+  }
+
   render () {
     let { user, customers, customer, payments, modal, payment } = this.state
     const totalpayments = payments.reduce(
@@ -190,7 +208,15 @@ class SmartPayment extends React.Component {
                           <tr style={{ 'text-align': 'center' }}>
                             <th>RAZON SOCIAL</th>
                             <th>PAGADO</th>
-                            <th style={{ width: '2em' }}></th>
+                            <th style={{ width: '2em' }}>
+                              <Button
+                                className='font-icon-sm'
+                                color='primary'
+                                onClick={e => this.viewPdf()}
+                              >
+                                <i className='pe-7s-copy-file'></i>
+                              </Button>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
