@@ -30,6 +30,7 @@ import avatar4 from '../../../assets/utils/images/avatars/4.jpg'
 import ByMonth from './ByMonth'
 import ByType from './ByType'
 import ByRangePay from './ByRangePay'
+import axios from '../../../api/axios'
 
 const data = [
   { name: 'Page A', uv: 4000, pv: 2400, amt: 2400 },
@@ -60,19 +61,32 @@ export default class AnalyticsDashboard1 extends Component {
     }
   }
 
-  componentDidMount () {
-    // Simple GET request with a JSON body using fetch
-    fetch('https://ats.auditwhole.com/dashboard')
-      .then(response => response.json())
-      .then(res => {
-        this.setState({
-          total_customers: res.total_customers,
-          total_users: res.total_users,
-          total_payments: res.total_payments,
-          payment_months: res.payment_months,
-          payment_types: res.payment_types
-        })
-      })
+  async componentDidMount () {
+    try {
+      await axios
+        .get('dashboard')
+        .then(
+          ({
+            data: {
+              total_customers,
+              total_users,
+              total_payments,
+              payment_months,
+              payment_types
+            }
+          }) => {
+            this.setState({
+              total_customers,
+              total_users,
+              total_payments,
+              payment_months,
+              payment_types
+            })
+          }
+        )
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   render () {
