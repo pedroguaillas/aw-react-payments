@@ -14,6 +14,7 @@ import {
   InputGroup,
   Input
 } from 'reactstrap'
+import axios from '../../../api/axios'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
@@ -29,19 +30,18 @@ class Users extends React.Component {
     modal: false
   }
 
-  componentDidMount () {
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paginate: 15 })
+  async componentDidMount () {
+    let { search } = this.state
+
+    try {
+      await axios
+        .post('listusser', { search })
+        .then(({ data: { data, links, meta } }) => {
+          this.setState({ users: data, links, meta })
+        })
+    } catch (err) {
+      console.log(err)
     }
-    fetch('https://ats.auditwhole.com/listusser', requestOptions)
-      .then(response => response.json())
-      .then(res => {
-        let { data, meta, links } = res
-        this.setState({ users: data, meta, links })
-      })
   }
 
   reqNewPage = async (e, page) => {
@@ -50,24 +50,33 @@ class Users extends React.Component {
     if (page !== null) {
       let { search, meta } = this.state
       try {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search })
-        }
-        fetch(
-          `${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`,
-          requestOptions
-        )
-          .then(response => response.json())
+        await axios
+          .post(`${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`, {
+            search
+          })
           .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              users: data,
-              links,
-              meta
-            })
+            let { data, links, meta } = res.data
+            this.setState({ users: data, links, meta })
+          })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  reloadPage = async () => {
+    let {
+      search,
+      meta: { current_page, path }
+    } = this.state
+
+    if (current_page !== null) {
+      try {
+        await axios
+          .post(`${path}?page=${current_page}`, { search })
+          .then(res => {
+            let { data, links, meta } = res.data
+            this.setState({ users: data, links, meta })
           })
       } catch (error) {
         console.log(error)
@@ -79,23 +88,14 @@ class Users extends React.Component {
     let { value } = e.target
 
     try {
-      // Simple POST request with a JSON body using fetch
-      const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search: value })
-      }
-      fetch('https://ats.auditwhole.com/listusser', requestOptions)
-        .then(response => response.json())
-        .then(res => {
-          let { data, links, meta } = res
-          this.setState({
-            search: value,
-            users: data,
-            links,
-            meta
-          })
+      if (value.length > 2) {
+        await axios.post('listusser', { search: value }).then(res => {
+          let { data, links, meta } = res.data
+          this.setState({ search: value, users: data, links, meta })
         })
+      } else {
+        this.setState({ search: value })
+      }
     } catch (error) {
       console.log(error)
     }
@@ -119,23 +119,15 @@ class Users extends React.Component {
     })
   }
 
-  submit = () => {
+  submit = async () => {
     if (this.validate()) {
-      // Simple POST request with a JSON body using fetch
       let { user, option } = this.state
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
-      }
 
       if (option === 'CREATE') {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'POST'
 
-        fetch('https://ats.auditwhole.com/register', requestOptions)
-          .then(response => response.json())
-          .then(res => {
-            let { success } = res
+        try {
+          await axios.post('register', user).then(({ data: { success } }) => {
             if (success) {
               this.setState({ modal: false })
               this.reloadPage()
@@ -144,28 +136,27 @@ class Users extends React.Component {
               alert('No se pudo registrar el usuario')
             }
           })
-          .catch(() => {
-            alert('Ya existe un cliente con ese RUC')
-          })
+        } catch (error) {
+          console.log(error)
+        }
       } else {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'PUT'
 
-        fetch(
-          'https://ats.auditwhole.com/customers/' +
-            this.state.custom.ruc +
-            '/update',
-          requestOptions
-        )
-          .then(response => response.json())
-          .then(res => {
-            this.setState({ modal: false })
-            this.reloadPage()
-            document.getElementById('btn-save').disabled = false
-          })
-          .catch(() => {
-            alert('Ya existe un cliente con ese RUC')
-          })
+        try {
+          await axios
+            .put(`customers${this.state.custom.ruc}/update`, user)
+            .then(({ data: { success } }) => {
+              if (success) {
+                this.setState({ modal: false })
+                this.reloadPage()
+                document.getElementById('btn-save').disabled = false
+              } else {
+                alert('No se pudo registrar el usuario')
+              }
+            })
+        } catch (error) {
+          console.log(error)
+        }
       }
     }
   }

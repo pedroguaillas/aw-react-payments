@@ -14,6 +14,7 @@ import {
   ListGroup,
   ListGroupItem
 } from 'reactstrap'
+import axios from '../../../api/axios'
 
 class FormCustomModal extends Component {
   state = {
@@ -22,20 +23,19 @@ class FormCustomModal extends Component {
     suggestions: []
   }
 
-  onChangeItem = e => {
-    // Simple POST request with a JSON body using fetch
+  onChangeItem = async e => {
     let { value } = e.target
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paginate: 3, search: value })
+
+    try {
+      await axios
+        .post('listusser', { paginate: 3, search: value })
+        .then(res => {
+          let { data } = res.data
+          this.setState({ suggestions: data, item: value })
+        })
+    } catch (err) {
+      console.log(err)
     }
-    fetch('https://ats.auditwhole.com/listusser', requestOptions)
-      .then(response => response.json())
-      .then(res => {
-        let { data } = res
-        this.setState({ suggestions: data, item: value })
-      })
   }
 
   componentDidUpdate (prevProps) {

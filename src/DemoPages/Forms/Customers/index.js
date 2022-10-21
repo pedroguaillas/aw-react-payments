@@ -14,6 +14,7 @@ import {
   CardHeader,
   ButtonGroup
 } from 'reactstrap'
+import axios from '../../../api/axios'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
 import FormCustomModal from './FormCustomModal'
@@ -33,22 +34,16 @@ class FormElementsControls extends React.Component {
 
   async componentDidMount () {
     let { search } = this.state
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ search })
-    }
-    fetch('https://ats.auditwhole.com/customerlist', requestOptions)
-      .then(response => response.json())
-      .then(res => {
-        let { data, links, meta } = res
-        this.setState({
-          customers: data,
-          links,
-          meta
+
+    try {
+      await axios
+        .post('customerlist', { search })
+        .then(({ data: { data, links, meta } }) => {
+          this.setState({ customers: data, links, meta })
         })
-      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   reqNewPage = async (e, page) => {
@@ -56,25 +51,15 @@ class FormElementsControls extends React.Component {
 
     if (page !== null) {
       let { search, meta } = this.state
+
       try {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search })
-        }
-        fetch(
-          `${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`,
-          requestOptions
-        )
-          .then(response => response.json())
+        await axios
+          .post(`${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`, {
+            search
+          })
           .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              customers: data,
-              links,
-              meta
-            })
+            let { data, links, meta } = res.data
+            this.setState({ customers: data, links, meta })
           })
       } catch (error) {
         console.log(error)
@@ -83,29 +68,39 @@ class FormElementsControls extends React.Component {
   }
 
   reloadPage = async () => {
-    let { current_page, path } = this.state.meta
+    let {
+      search,
+      meta: { current_page, path }
+    } = this.state
+
     if (current_page !== null) {
-      let { search } = this.state
       try {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search })
-        }
-        fetch(`${path}?page=${current_page}`, requestOptions)
-          .then(response => response.json())
+        await axios
+          .post(`${path}?page=${current_page}`, { search })
           .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              customers: data,
-              links,
-              meta
-            })
+            let { data, links, meta } = res.data
+            this.setState({ customers: data, links, meta })
           })
       } catch (error) {
         console.log(error)
       }
+    }
+  }
+
+  onChangeSearch = async e => {
+    let { value } = e.target
+
+    try {
+      if (value.length > 2) {
+        await axios.post('customerlist', { search: value }).then(res => {
+          let { data, links, meta } = res.data
+          this.setState({ search: value, customers: data, links, meta })
+        })
+      } else {
+        this.setState({ search: value })
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -151,81 +146,40 @@ class FormElementsControls extends React.Component {
     this.handleChange(e)
   }
 
-  onChangeSearch = async e => {
-    let { value } = e.target
-
-    try {
-      if (value.length > 2) {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search: value })
-        }
-        fetch('https://ats.auditwhole.com/customerlist', requestOptions)
-          .then(response => response.json())
-          .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              search: value,
-              customers: data,
-              links,
-              meta
-            })
-          })
-      } else {
-        this.setState({ search: value })
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  submit = () => {
+  submit = async () => {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
       let { custom, option } = this.state
       if (custom.amount === undefined || custom.amount === '') {
         custom.amount = 0
       }
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(custom)
-      }
 
       if (option === 'CREATE') {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'POST'
 
-        fetch('https://ats.auditwhole.com/customers', requestOptions)
-          .then(response => response.json())
-          .then(res => {
+        try {
+          await axios.post('customers', custom).then(res => {
             this.setState({ modal: false })
             this.reloadPage()
             document.getElementById('btn-save').disabled = false
           })
-          .catch(() => {
-            alert('Ya existe un cliente con ese RUC')
-          })
+        } catch (err) {
+          console.log(err)
+        }
       } else {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'PUT'
 
-        fetch(
-          'https://ats.auditwhole.com/customers/' +
-            this.state.custom.ruc +
-            '/update',
-          requestOptions
-        )
-          .then(response => response.json())
-          .then(res => {
-            this.setState({ modal: false })
-            this.reloadPage()
-            document.getElementById('btn-save').disabled = false
-          })
-          .catch(() => {
-            alert('Ya existe un cliente con ese RUC')
-          })
+        try {
+          await axios
+            .put('customers/' + this.state.custom.ruc + '/update', custom)
+            .then(res => {
+              this.setState({ modal: false })
+              this.reloadPage()
+              document.getElementById('btn-save').disabled = false
+            })
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   }
@@ -258,18 +212,21 @@ class FormElementsControls extends React.Component {
 
   edit = ruc => {
     let option = 'EDIT'
-    fetch('https://ats.auditwhole.com/customers/' + ruc + '/show')
-      .then(response => response.json())
-      .then(res => {
-        let { custom, user } = res
-        custom.user_id = user.id
-        this.setState({
-          custom,
-          users: [{ id: user.id, atts: { name: user.name } }],
-          modal: true,
-          option
+    try {
+      axios
+        .get('customers/' + ruc + '/show')
+        .then(({ data: { custom, user } }) => {
+          custom.user_id = user.id
+          this.setState({
+            custom,
+            users: [{ id: user.id, atts: { name: user.name } }],
+            modal: true,
+            option
+          })
         })
-      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   render () {

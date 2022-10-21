@@ -7,6 +7,8 @@ const Dashboards = lazy(() => import('../../DemoPages/Dashboards'))
 
 const Forms = lazy(() => import('../../DemoPages/Forms'))
 
+const Login = lazy(() => import('../../DemoPages/Login'))
+
 const AppMain = () => {
   return (
     <Fragment>
@@ -42,6 +44,23 @@ const AppMain = () => {
         }
       >
         <Route path='/dashboards' component={Dashboards} />
+      </Suspense>
+
+      {/* Login */}
+
+      <Suspense
+        fallback={
+          <div className='loader-container'>
+            <div className='loader-container-inner'>
+              <h6 className='mt-3'>
+                Por favor está iniciando el programa ...
+                <small>Espere hasta que se cargue todo el contenido</small>
+              </h6>
+            </div>
+          </div>
+        }
+      >
+        <Route path='/login' component={Login} />
       </Suspense>
 
       <Route
