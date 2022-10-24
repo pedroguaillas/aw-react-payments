@@ -11,12 +11,14 @@ import {
   CardHeader,
   Form,
   InputGroup,
-  Input
+  Input,
+  Button
 } from 'reactstrap'
 import axios from '../../../api/axios'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
+import EditAmountSalaryModal from './EditAmountSalaryModal'
 
 class Users extends React.Component {
   state = {
@@ -25,10 +27,11 @@ class Users extends React.Component {
     links: null,
     meta: null,
     user: { rol: 'asesor' },
-    modal: false
+    modal: false,
+    user: null
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     try {
       await axios
         .post(`users/salaries`, { paginate: 15 })
@@ -79,8 +82,59 @@ class Users extends React.Component {
     }
   }
 
-  render() {
-    let { users, search, links, meta } = this.state
+  editSalary = u => {
+    let user = {
+      id: u.id,
+      salary: u.atts.salary
+    }
+    this.setState({ user, modal: true })
+  }
+
+  onChangeNumber = e => {
+    this.setState({
+      user: {
+        ...this.state.user,
+        salary: e.target.value
+      }
+    })
+  }
+
+  toogle = () => this.setState(state => ({ modal: !state.modal }))
+
+  submit = async () => {
+    if (this.validate) {
+      try {
+        let { users, user } = this.state
+        await axios
+          .put(`user/${user.id}`, { salary: user.salary })
+          .then(({ data: { user } }) => {
+            let index = users.findIndex(u => u.id === user.id)
+            users[index].atts.salary = user.salary
+            this.setState({
+              users,
+              modal: false,
+              user: null
+            })
+          })
+      } catch (err) {
+        console.log(err)
+      }
+    }
+  }
+
+  validate = () => {
+    let { user } = this.state
+
+    if (user.salary === '' || user.salary === undefined || user.salary <= 0) {
+      alert('El sueldo debe ser mayor a cero')
+      return
+    }
+
+    return true
+  }
+
+  render () {
+    let { users, search, links, meta, modal, user } = this.state
 
     return (
       <Fragment>
@@ -99,6 +153,13 @@ class Users extends React.Component {
             exit={false}
           >
             <div>
+              <EditAmountSalaryModal
+                modal={modal}
+                toogle={this.toogle}
+                user={user}
+                onChangeNumber={this.onChangeNumber}
+                submit={this.submit}
+              />
               <Row>
                 <Col lg='12'>
                   <Card className='main-card mb-3'>
@@ -128,22 +189,29 @@ class Users extends React.Component {
                         <tbody>
                           {users.length > 0
                             ? users.map((user, index) => (
-                              <tr key={`Row${index}`}>
-                                <td>{user.atts.name}</td>
-                                <td>{user.atts.salary}</td>
-                                <td>
-                                  <ButtonGroup size='sm'>
-                                    <Link
-                                      to={`/app/asesor/${user.id}/salarios`}
-                                      className='btn btn-success'
-                                      title='Lista de clientes con pagos'
-                                    >
-                                      <i className='nav-link-icon lnr-chart-bars'></i>
-                                    </Link>
-                                  </ButtonGroup>
-                                </td>
-                              </tr>
-                            ))
+                                <tr key={`Row${index}`}>
+                                  <td>{user.atts.name}</td>
+                                  <td>{user.atts.salary}</td>
+                                  <td>
+                                    <ButtonGroup size='sm'>
+                                      <Button
+                                        onClick={() => this.editSalary(user)}
+                                        className='me-1'
+                                        color='primary'
+                                      >
+                                        <i className='nav-link-icon lnr-pencil'></i>
+                                      </Button>
+                                      <Link
+                                        to={`/app/asesor/${user.id}/salarios`}
+                                        className='btn btn-success'
+                                        title='Lista de clientes con pagos'
+                                      >
+                                        <i className='nav-link-icon lnr-chart-bars'></i>
+                                      </Link>
+                                    </ButtonGroup>
+                                  </td>
+                                </tr>
+                              ))
                             : null}
                         </tbody>
                       </Table>

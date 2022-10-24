@@ -1,5 +1,13 @@
 import React, { Fragment } from 'react'
-import { Row, Col, Card, CardBody, Table } from 'reactstrap'
+import {
+  Row,
+  Col,
+  Card,
+  CardBody,
+  Table,
+  Button,
+  ButtonGroup
+} from 'reactstrap'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
@@ -21,10 +29,11 @@ class ListSalaries extends React.Component {
     type_salary: 'anticipo',
     item_id: 0,
     item_id_of_pay: 0,
-    complete: false
+    complete: false,
+    salary_delete_id: 0
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     const {
       match: { params }
     } = this.props
@@ -98,14 +107,15 @@ class ListSalaries extends React.Component {
       amount: user.salary,
       user_id: user.id,
       balance: '',
-      cheque: ''
+      cheque: '',
+      paid: 0
     }
-    this.setState(state => ({
+    this.setState({
       salary,
       type_salary: 'anticipo',
-      modal: !state.modal,
+      modal: true,
       complete: false
-    }))
+    })
   }
 
   submitSaveSalary = async () => {
@@ -135,31 +145,29 @@ class ListSalaries extends React.Component {
       if (salary.id === undefined) {
         document.getElementById('btn-save').disabled = true
         try {
-          await axios
-            .post(`salaries`, salary)
-            .then(({ data: { salary } }) => {
-              salary.paid = 0
-              salary.balance =
-                salary.balance === undefined ? 0 : Number(salary.balance)
-              if (salary.cheque === undefined) {
-                salary.cheque = null
-              }
-              salary.amount_cheque =
-                salary.amount_cheque === undefined
-                  ? 0
-                  : Number(salary.amount_cheque)
+          await axios.post(`salaries`, salary).then(({ data: { salary } }) => {
+            salary.paid = 0
+            salary.balance =
+              salary.balance === undefined ? 0 : Number(salary.balance)
+            if (salary.cheque === undefined) {
+              salary.cheque = null
+            }
+            salary.amount_cheque =
+              salary.amount_cheque === undefined
+                ? 0
+                : Number(salary.amount_cheque)
 
-              salary.cash = salary.cash === undefined ? 0 : Number(salary.cash)
-              salaries.unshift(salary)
-              this.setState({
-                modal: false,
-                salaries,
-                salary_selected: salary,
-                salaryadvances: [],
-                salaryadvanceofpays: []
-              })
-              document.getElementById('btn-save').disabled = false
+            salary.cash = salary.cash === undefined ? 0 : Number(salary.cash)
+            salaries.unshift(salary)
+            this.setState({
+              modal: false,
+              salaries,
+              salary_selected: salary,
+              salaryadvances: [],
+              salaryadvanceofpays: []
             })
+            document.getElementById('btn-save').disabled = false
+          })
         } catch (err) {
           console.log(err)
         }
@@ -170,16 +178,14 @@ class ListSalaries extends React.Component {
         var index = salaries.findIndex(e => e.id === salary.id)
         salaries[index] = salary
         try {
-          await axios
-            .put(`salaries/${salary.id}`)
-            .then(res => {
-              this.setState({
-                modal: false,
-                salaries,
-                salary_selected: salary
-              })
-              document.getElementById('btn-save').disabled = false
+          await axios.put(`salaries/${salary.id}`).then(res => {
+            this.setState({
+              modal: false,
+              salaries,
+              salary_selected: salary
             })
+            document.getElementById('btn-save').disabled = false
+          })
         } catch (err) {
           console.log(err)
         }
@@ -213,6 +219,26 @@ class ListSalaries extends React.Component {
         .then(({ data: { salaryadvances, salaryadvanceofpays } }) => {
           this.setState({ salaryadvances, salaryadvanceofpays })
         })
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  deleteSalary = async id => {
+    this.setState({ salary_delete_id: id })
+  }
+
+  destroySalary = async id => {
+    try {
+      await axios.delete(`salaries/${id}`).then(() => {
+        let { salaries } = this.state
+        salaries = salaries.filter(s => s.id !== id)
+        this.setState({
+          salaries,
+          salary_delete_id: 0,
+          salary_selected: null
+        })
+      })
     } catch (err) {
       console.log(err)
     }
@@ -378,17 +404,15 @@ class ListSalaries extends React.Component {
 
   deleteItem = async id => {
     try {
-      await axios
-        .delete(`salaryadvances/${id}`)
-        .then(() => {
-          let { salaryadvances } = this.state
-          salaryadvances = salaryadvances.filter(e => e.id !== id)
-          this.setState({
-            salaryadvances,
-            item_id: 0
-          })
-          this.recalculatePaid()
+      await axios.delete(`salaryadvances/${id}`).then(() => {
+        let { salaryadvances } = this.state
+        salaryadvances = salaryadvances.filter(e => e.id !== id)
+        this.setState({
+          salaryadvances,
+          item_id: 0
         })
+        this.recalculatePaid()
+      })
     } catch (err) {
       console.log(err)
     }
@@ -484,7 +508,10 @@ class ListSalaries extends React.Component {
         document.getElementById('checkbox' + index).disabled = true
         try {
           await axios
-            .put(`salaryadvanceofpays/${salaryadvanceofpay.id}`, salaryadvanceofpay)
+            .put(
+              `salaryadvanceofpays/${salaryadvanceofpay.id}`,
+              salaryadvanceofpay
+            )
             .then(() => {
               // Habilitar el Checkbox
               document.getElementById('checkbox' + index).disabled = false
@@ -553,17 +580,15 @@ class ListSalaries extends React.Component {
 
   deleteItemOfPay = async id => {
     try {
-      await axios
-        .delete(`salaryadvanceofpays/${id}`)
-        .then(() => {
-          let { salaryadvanceofpays } = this.state
-          salaryadvanceofpays = salaryadvanceofpays.filter(e => e.id !== id)
-          this.setState({
-            salaryadvanceofpays,
-            item_id_of_pay: 0
-          })
-          this.recalculatePaid()
+      await axios.delete(`salaryadvanceofpays/${id}`).then(() => {
+        let { salaryadvanceofpays } = this.state
+        salaryadvanceofpays = salaryadvanceofpays.filter(e => e.id !== id)
+        this.setState({
+          salaryadvanceofpays,
+          item_id_of_pay: 0
         })
+        this.recalculatePaid()
+      })
     } catch (err) {
       console.log(err)
     }
@@ -578,7 +603,7 @@ class ListSalaries extends React.Component {
     }))
   }
 
-  render() {
+  render () {
     let {
       type_salary,
       modal,
@@ -590,7 +615,8 @@ class ListSalaries extends React.Component {
       salaryadvanceofpays,
       item_id,
       item_id_of_pay,
-      complete
+      complete,
+      salary_delete_id
     } = this.state
     return (
       <Fragment>
@@ -609,6 +635,14 @@ class ListSalaries extends React.Component {
             exit={false}
           >
             <div>
+              {/* Eliminar los items de los salarios */}
+              <DialogDelete
+                item_id={salary_delete_id}
+                deleteItem={this.destroySalary}
+                title=' sueldo'
+              />
+
+              {/* Eliminar los items de los anticipos */}
               <DialogDelete
                 item_id={item_id > item_id_of_pay ? item_id : item_id_of_pay}
                 deleteItem={
@@ -616,7 +650,7 @@ class ListSalaries extends React.Component {
                     ? this.deleteItem
                     : this.deleteItemOfPay
                 }
-                title='anticipo'
+                title=' anticipo'
               />
               <FormSalaryModal
                 type_salary={type_salary}
@@ -653,58 +687,73 @@ class ListSalaries extends React.Component {
                             <th>Sueldo</th>
                             <th>Cobrado</th>
                             <th>A cobrar</th>
-                            {/* <th style={{ width: '2em' }}></th> */}
+                            <th style={{ width: '4em' }}></th>
                           </tr>
                         </thead>
-                        <tbody style={{ cursor: 'pointer' }}>
+                        <tbody>
                           {salaries.length > 0
                             ? salaries.map((salary, index) => (
-                              <tr
-                                onClick={() => this.onSelectSalary(salary)}
-                                key={`salary${index}`}
-                                className={
-                                  salary_selected !== null &&
+                                <tr
+                                  // onClick={() => this.onSelectSalary(salary)}
+                                  key={`salary${index}`}
+                                  className={
+                                    salary_selected !== null &&
                                     salary_selected.id === salary.id
-                                    ? 'table-active'
-                                    : null
-                                }
-                              >
-                                {/* -1 Por que se refiere a la posicion del array */}
-                                <td>
-                                  {
-                                    months[salary.month.substring(5) - 1]
-                                      .description
+                                      ? 'table-active'
+                                      : null
                                   }
-                                </td>
-                                <td>{salary.amount}</td>
-                                <td>
-                                  {(
-                                    salary.balance +
-                                    salary.amount_cheque +
-                                    salary.paid +
-                                    salary.cash
-                                  ).toFixed(2)}
-                                </td>
-                                <td>
-                                  {(
-                                    salary.amount -
-                                    salary.balance -
-                                    salary.amount_cheque -
-                                    salary.paid -
-                                    salary.cash
-                                  ).toFixed(2)}
-                                </td>
-                                {/* <td>
-                                    <Button
-                                      className='font-icon-sm pb-0 pt-1'
-                                      color='success'
-                                      onClick={e => this.onSelectSalary(salary)}
-                                    >
-                                      <i className='pe-7s-cash'></i>
-                                    </Button>
-                                  </td> */}
-                              </tr>
-                            ))
+                                >
+                                  {/* -1 Por que se refiere a la posicion del array */}
+                                  <td>
+                                    {
+                                      months[salary.month.substring(5) - 1]
+                                        .description
+                                    }
+                                  </td>
+                                  <td>{salary.amount}</td>
+                                  <td>
+                                    {(
+                                      salary.balance +
+                                      salary.amount_cheque +
+                                      salary.paid +
+                                      salary.cash
+                                    ).toFixed(2)}
+                                  </td>
+                                  <td>
+                                    {(
+                                      salary.amount -
+                                      salary.balance -
+                                      salary.amount_cheque -
+                                      salary.paid -
+                                      salary.cash
+                                    ).toFixed(2)}
+                                  </td>
+                                  <td>
+                                    <ButtonGroup zise='sm'>
+                                      <Button
+                                        title='Ver'
+                                        className='font-icon-sm pb-0 pt-1 px-1 me-1'
+                                        color='success'
+                                        onClick={e =>
+                                          this.onSelectSalary(salary)
+                                        }
+                                      >
+                                        <i className='pe-7s-look'></i>
+                                      </Button>
+                                      <Button
+                                        title='Eliminar salario'
+                                        className='font-icon-sm pb-0 pt-1 px-1'
+                                        color='danger'
+                                        onClick={e =>
+                                          this.deleteSalary(salary.id)
+                                        }
+                                      >
+                                        <i className='pe-7s-trash'></i>
+                                      </Button>
+                                    </ButtonGroup>
+                                  </td>
+                                </tr>
+                              ))
                             : null}
                         </tbody>
                       </Table>
