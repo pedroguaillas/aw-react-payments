@@ -16,6 +16,7 @@ import Paginate from '../../Components/Paginate/Index'
 
 import FormPaymentModal from './FormPaymentModal'
 import { months, types } from './../PaymentHelpers'
+import axios from '../../../api/axios'
 
 class Payments extends React.Component {
   state = {
@@ -29,32 +30,26 @@ class Payments extends React.Component {
     meta: null
   }
 
-  componentDidMount () {
+  async componentDidMount() {
     const {
       match: { params }
     } = this.props
 
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ruc: params.ruc })
-    }
-    fetch('https://ats.auditwhole.com/paymentlist', requestOptions)
-      .then(response => response.json())
-      .then(res => {
-        let { customer, payments, year, month } = res
-        this.setState({
-          customer,
-          payments,
-          payment: {
-            ...this.state.payment,
-            cliente_auditwhole_ruc: params.ruc
-          },
-          year,
-          month
+    try {
+      await axios
+        .post('paymentlist', { ruc: params.ruc })
+        .then(({ data: { customer, payments, year, month } }) => {
+          this.setState({
+            customer, payments,
+            payment: {
+              ...this.state.payment,
+              cliente_auditwhole_ruc: params.ruc
+            }, year, month
+          })
         })
-      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   //Show modal
@@ -106,63 +101,52 @@ class Payments extends React.Component {
     })
   }
 
-  submit = () => {
+  submit = async () => {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
       let { payment } = this.state
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payment)
-      }
+
       if (payment.id === undefined) {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'POST'
 
-        fetch('https://ats.auditwhole.com/payments', requestOptions)
-          .then(response => response.json())
-          .then(res => {
-            let { payments } = this.state
-            payments.unshift({ atts: res.payment })
-            let { month, year } = res.payment
-            if (month === 12) {
-              month = 1
-              year++
-            } else {
-              month++
-            }
-            this.setState({
-              modal: false,
-              payments,
-              year,
-              month
+        try {
+          await axios
+            .post('payments', payment)
+            .then(({ data }) => {
+              let { payments } = this.state
+              payments.unshift({ atts: data.payment })
+              let { month, year } = data.payment
+              if (month === 12) {
+                month = 1
+                year++
+              } else {
+                month++
+              }
+              this.setState({ modal: false, payments, year, month })
+              document.getElementById('btn-save').disabled = false
             })
-            document.getElementById('btn-save').disabled = false
-          })
-          .catch(() => {
-            alert('Ya existe un cobro de ese mes')
-          })
+        } catch (err) {
+          console.log(err)
+        }
       } else {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'PUT'
-        fetch(
-          'https://ats.auditwhole.com/payments/' + payment.id,
-          requestOptions
-        )
-          .then(response => response.json())
-          .then(res => {
-            let { payments } = this.state
-            var { year, month, amount, type, voucher, note, date } = res.payment
-            var index = payments.findIndex(e => e.id === payment.id)
-            payments[index] = {
-              id: payment.id,
-              atts: { year, month, amount, type, voucher, note, date }
-            }
-            this.setState({
-              modal: false,
-              payments
+        try {
+          await axios
+            .put(`payments/${payment.id}`, payment)
+            .then(({ data }) => {
+              let { payments } = this.state
+              var { year, month, amount, type, voucher, note, date } = data.payment
+              var index = payments.findIndex(e => e.id === payment.id)
+              payments[index] = {
+                id: payment.id,
+                atts: { year, month, amount, type, voucher, note, date }
+              }
+              this.setState({ modal: false, payments })
+              document.getElementById('btn-save').disabled = false
             })
-            document.getElementById('btn-save').disabled = false
-          })
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   }
@@ -171,18 +155,21 @@ class Payments extends React.Component {
     this.setState({ item_id })
   }
 
-  deleteItem = id => {
-    // Simple DELETE request with a JSON body using fetch
-    fetch('https://ats.auditwhole.com/payments/' + id, {
-      method: 'DELETE'
-    }).then(() => {
-      let { payments } = this.state
-      payments = payments.filter(e => e.id !== id)
-      this.setState({
-        payments,
-        item_id: 0
-      })
-    })
+  deleteItem = async id => {
+    try {
+      await axios
+        .delete(`payments/${id}`)
+        .then(() => {
+          let { payments } = this.state
+          payments = payments.filter(e => e.id !== id)
+          this.setState({
+            payments,
+            item_id: 0
+          })
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   validate = () => {
@@ -196,7 +183,7 @@ class Payments extends React.Component {
     return true
   }
 
-  render () {
+  render() {
     let {
       payments,
       payment,
@@ -283,11 +270,10 @@ class Payments extends React.Component {
                                 <td>${payment.atts.amount}</td>
                                 <td className='text-center'>
                                   <div
-                                    className={`badge bg-${
-                                      types.find(
-                                        type => type.code === payment.atts.type
-                                      ).color
-                                    }`}
+                                    className={`badge bg-${types.find(
+                                      type => type.code === payment.atts.type
+                                    ).color
+                                      }`}
                                   >
                                     {payment.atts.type}
                                   </div>

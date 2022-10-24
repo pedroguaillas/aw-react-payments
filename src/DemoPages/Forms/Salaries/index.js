@@ -13,6 +13,7 @@ import {
   InputGroup,
   Input
 } from 'reactstrap'
+import axios from '../../../api/axios'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
@@ -27,19 +28,16 @@ class Users extends React.Component {
     modal: false
   }
 
-  componentDidMount () {
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paginate: 15 })
+  async componentDidMount() {
+    try {
+      await axios
+        .post(`users/salaries`, { paginate: 15 })
+        .then(({ data: { data, meta, links } }) => {
+          this.setState({ users: data, meta, links })
+        })
+    } catch (err) {
+      console.log(err)
     }
-    fetch('https://ats.auditwhole.com/users/salaries', requestOptions)
-      .then(response => response.json())
-      .then(res => {
-        let { data, meta, links } = res
-        this.setState({ users: data, meta, links })
-      })
   }
 
   reqNewPage = async (e, page) => {
@@ -47,25 +45,15 @@ class Users extends React.Component {
 
     if (page !== null) {
       let { search, meta } = this.state
+
       try {
-        // Simple POST request with a JSON body using fetch
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search })
-        }
-        fetch(
-          `${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`,
-          requestOptions
-        )
-          .then(response => response.json())
+        await axios
+          .post(`${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`, {
+            search
+          })
           .then(res => {
-            let { data, links, meta } = res
-            this.setState({
-              users: data,
-              links,
-              meta
-            })
+            let { data, links, meta } = res.data
+            this.setState({ users: data, links, meta })
           })
       } catch (error) {
         console.log(error)
@@ -75,38 +63,30 @@ class Users extends React.Component {
 
   onChangeSearch = async e => {
     let { value } = e.target
+    let { meta } = this.state
 
     try {
-      // Simple POST request with a JSON body using fetch
-      const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search: value })
-      }
-      fetch('https://ats.auditwhole.com/users/salaries', requestOptions)
-        .then(response => response.json())
-        .then(res => {
-          let { data, links, meta } = res
-          this.setState({
-            search: value,
-            users: data,
-            links,
-            meta
-          })
+      if (value.length > 2) {
+        await axios.post(meta.path, { search: value }).then(res => {
+          let { data, links, meta } = res.data
+          this.setState({ search: value, users: data, links, meta })
         })
+      } else {
+        this.setState({ search: value })
+      }
     } catch (error) {
       console.log(error)
     }
   }
 
-  render () {
+  render() {
     let { users, search, links, meta } = this.state
 
     return (
       <Fragment>
         <PageTitle
           heading='Asesores'
-          subheading='Lista de asesores de la empresa'
+          subheading='Lista de asesores con el sueldo'
           icon='pe-7s-user icon-gradient bg-sunny-morning'
         />
         <TransitionGroup>
@@ -148,22 +128,22 @@ class Users extends React.Component {
                         <tbody>
                           {users.length > 0
                             ? users.map((user, index) => (
-                                <tr key={`Row${index}`}>
-                                  <td>{user.atts.name}</td>
-                                  <td>{user.atts.salary}</td>
-                                  <td>
-                                    <ButtonGroup size='sm'>
-                                      <Link
-                                        to={`/app/asesor/${user.id}/salarios`}
-                                        className='btn btn-success'
-                                        title='Lista de clientes con pagos'
-                                      >
-                                        <i className='nav-link-icon lnr-chart-bars'></i>
-                                      </Link>
-                                    </ButtonGroup>
-                                  </td>
-                                </tr>
-                              ))
+                              <tr key={`Row${index}`}>
+                                <td>{user.atts.name}</td>
+                                <td>{user.atts.salary}</td>
+                                <td>
+                                  <ButtonGroup size='sm'>
+                                    <Link
+                                      to={`/app/asesor/${user.id}/salarios`}
+                                      className='btn btn-success'
+                                      title='Lista de clientes con pagos'
+                                    >
+                                      <i className='nav-link-icon lnr-chart-bars'></i>
+                                    </Link>
+                                  </ButtonGroup>
+                                </td>
+                              </tr>
+                            ))
                             : null}
                         </tbody>
                       </Table>

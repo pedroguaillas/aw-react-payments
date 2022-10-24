@@ -62,6 +62,22 @@ class FormUserModal extends Component {
                 </Col>
               </FormGroup>
               <FormGroup className='mb-1' row>
+                <Label for='salary' sm={4}>
+                  Salario
+                </Label>
+                <Col sm={6}>
+                  <Input
+                    type='number'
+                    bsSize='sm'
+                    onChange={handleChange}
+                    value={user.salary}
+                    name='salary'
+                    min={20}
+                    max={10000}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup className='mb-1' row>
                 <Label for='email' sm={4}>
                   Correo electronico
                 </Label>

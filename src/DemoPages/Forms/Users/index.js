@@ -30,7 +30,7 @@ class Users extends React.Component {
     modal: false
   }
 
-  async componentDidMount () {
+  async componentDidMount() {
     let { search } = this.state
 
     try {
@@ -86,10 +86,11 @@ class Users extends React.Component {
 
   onChangeSearch = async e => {
     let { value } = e.target
+    let { meta } = this.state
 
     try {
       if (value.length > 2) {
-        await axios.post('listusser', { search: value }).then(res => {
+        await axios.post(meta.path, { search: value }).then(res => {
           let { data, links, meta } = res.data
           this.setState({ search: value, users: data, links, meta })
         })
@@ -102,8 +103,9 @@ class Users extends React.Component {
   }
 
   newUser = () => {
+    let user = { rol: 'asesor', name: '', user: '', email: '', password: '', salary: '' }
     let option = 'CREATE'
-    this.setState(state => ({ modal: !state.modal, option }))
+    this.setState({ modal: true, user, option })
   }
 
   toggle = () => {
@@ -144,7 +146,7 @@ class Users extends React.Component {
 
         try {
           await axios
-            .put(`customers${this.state.custom.ruc}/update`, user)
+            .put(`users/${this.state.custom.ruc}/update`, user)
             .then(({ data: { success } }) => {
               if (success) {
                 this.setState({ modal: false })
@@ -162,12 +164,13 @@ class Users extends React.Component {
   }
 
   validate = () => {
-    let { name, user, email, password } = this.state.user
+    let { name, user, email, password, salary } = this.state.user
 
     if (
       name === undefined ||
       user === undefined ||
       email === undefined ||
+      salary === undefined ||
       password === undefined
     ) {
       alert('Todos los campos son obligatorios')
@@ -177,7 +180,20 @@ class Users extends React.Component {
     return true
   }
 
-  render () {
+  edit = id => {
+    let option = 'EDIT'
+    try {
+      axios
+        .get(`show/${id}/show`)
+        .then(({ data: { user } }) => {
+          this.setState({ user, modal: true, option })
+        })
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  render() {
     let { users, search, links, meta, modal, user } = this.state
 
     return (
@@ -242,31 +258,32 @@ class Users extends React.Component {
                         </thead>
                         <tbody>
                           {users.length > 0
-                            ? users.map((user, index) => (
-                                <tr key={`Row${index}`}>
-                                  <td>{user.atts.name}</td>
-                                  <td>{user.atts.user}</td>
-                                  <td>{user.atts.email}</td>
-                                  <td>
-                                    <ButtonGroup size='sm'>
-                                      <Button
-                                        color='primary'
-                                        title='Editar'
-                                        className='me-2'
-                                      >
-                                        <i className='nav-link-icon lnr-pencil'></i>
-                                      </Button>
-                                      <Link
-                                        to={`/app/asesor/${user.id}/pagos`}
-                                        className='btn btn-success'
-                                        title='Lista de clientes con pagos'
-                                      >
-                                        <i className='nav-link-icon lnr-chart-bars'></i>
-                                      </Link>
-                                    </ButtonGroup>
-                                  </td>
-                                </tr>
-                              ))
+                            ? users.map(({ id, atts }, index) => (
+                              <tr key={`Row${index}`}>
+                                <td>{atts.name}</td>
+                                <td>{atts.user}</td>
+                                <td>{atts.email}</td>
+                                <td>
+                                  <ButtonGroup size='sm'>
+                                    <Button
+                                      onClick={() => this.edit(id)}
+                                      color='primary'
+                                      title='Editar asesor'
+                                      className='me-2'
+                                    >
+                                      <i className='nav-link-icon lnr-pencil'></i>
+                                    </Button>
+                                    <Link
+                                      to={`/app/asesor/${id}/pagos`}
+                                      className='btn btn-success'
+                                      title='Lista de clientes con pagos'
+                                    >
+                                      <i className='nav-link-icon lnr-chart-bars'></i>
+                                    </Link>
+                                  </ButtonGroup>
+                                </td>
+                              </tr>
+                            ))
                             : null}
                         </tbody>
                       </Table>

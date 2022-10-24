@@ -7,6 +7,7 @@ import SalaryItems from './SalaryItems'
 import FormSalaryModal from './FormSalaryModal'
 import { months } from '../PaymentHelpers'
 import DialogDelete from '../../Components/DialogDelete'
+import axios from '../../../api/axios'
 
 class ListSalaries extends React.Component {
   state = {
@@ -23,22 +24,20 @@ class ListSalaries extends React.Component {
     complete: false
   }
 
-  componentDidMount () {
+  async componentDidMount() {
     const {
       match: { params }
     } = this.props
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paginate: 15, user_id: params.id })
+    try {
+      await axios
+        .post(`salarylist`, { paginate: 15, user_id: params.id })
+        .then(({ data: { salaries, user } }) => {
+          // Aun no le voy a paginar los salarios
+          this.setState({ salaries, user })
+        })
+    } catch (err) {
+      console.log(err)
     }
-    fetch('https://ats.auditwhole.com/salarylist', requestOptions)
-      .then(res => res.json())
-      .then(({ salaries, user }) => {
-        // Aun no le voy a paginar los salarios
-        this.setState({ salaries, user })
-      })
   }
 
   calMonth = () => {
@@ -109,7 +108,7 @@ class ListSalaries extends React.Component {
     }))
   }
 
-  submitSaveSalary = () => {
+  submitSaveSalary = async () => {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
       let { type_salary, salary, salaries } = this.state
@@ -133,63 +132,57 @@ class ListSalaries extends React.Component {
         delete salary.cheque
       }
 
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salary)
-      }
       if (salary.id === undefined) {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'POST'
+        try {
+          await axios
+            .post(`salaries`, salary)
+            .then(({ data: { salary } }) => {
+              salary.paid = 0
+              salary.balance =
+                salary.balance === undefined ? 0 : Number(salary.balance)
+              if (salary.cheque === undefined) {
+                salary.cheque = null
+              }
+              salary.amount_cheque =
+                salary.amount_cheque === undefined
+                  ? 0
+                  : Number(salary.amount_cheque)
 
-        fetch('https://ats.auditwhole.com/salaries', requestOptions)
-          .then(res => res.json())
-          .then(({ salary }) => {
-            salary.paid = 0
-            salary.balance =
-              salary.balance === undefined ? 0 : Number(salary.balance)
-            if (salary.cheque === undefined) {
-              salary.cheque = null
-            }
-            salary.amount_cheque =
-              salary.amount_cheque === undefined
-                ? 0
-                : Number(salary.amount_cheque)
-
-            salary.cash = salary.cash === undefined ? 0 : Number(salary.cash)
-            salaries.unshift(salary)
-            this.setState({
-              modal: false,
-              salaries,
-              salary_selected: salary,
-              salaryadvances: [],
-              salaryadvanceofpays: []
+              salary.cash = salary.cash === undefined ? 0 : Number(salary.cash)
+              salaries.unshift(salary)
+              this.setState({
+                modal: false,
+                salaries,
+                salary_selected: salary,
+                salaryadvances: [],
+                salaryadvanceofpays: []
+              })
+              document.getElementById('btn-save').disabled = false
             })
-            document.getElementById('btn-save').disabled = false
-          })
-          .catch(() => {
-            alert('Ya existe un cobro de ese mes')
-          })
+        } catch (err) {
+          console.log(err)
+        }
       } else {
         document.getElementById('btn-save').disabled = true
-        requestOptions.method = 'PUT'
 
         // Modifico antes porque por que si guarda
         var index = salaries.findIndex(e => e.id === salary.id)
         salaries[index] = salary
-
-        fetch(
-          'https://ats.auditwhole.com/salaries/' + salary.id,
-          requestOptions
-        )
-          .then(res => res.json())
-          .then(({}) => {
-            this.setState({
-              modal: false,
-              salaries,
-              salary_selected: salary
+        try {
+          await axios
+            .put(`salaries/${salary.id}`)
+            .then(res => {
+              this.setState({
+                modal: false,
+                salaries,
+                salary_selected: salary
+              })
+              document.getElementById('btn-save').disabled = false
             })
-            document.getElementById('btn-save').disabled = false
-          })
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   }
@@ -207,18 +200,22 @@ class ListSalaries extends React.Component {
     return true
   }
 
-  onSelectSalary = salary_selected => {
+  onSelectSalary = async salary_selected => {
     this.setState({
       salary_selected,
       salaryadvances: [],
       salaryadvanceofpays: []
     })
 
-    fetch('https://ats.auditwhole.com/salaryadvances/' + salary_selected.id)
-      .then(res => res.json())
-      .then(({ salaryadvances, salaryadvanceofpays }) => {
-        this.setState({ salaryadvances, salaryadvanceofpays })
-      })
+    try {
+      await axios
+        .get(`salaryadvances/${salary_selected.id}`)
+        .then(({ data: { salaryadvances, salaryadvanceofpays } }) => {
+          this.setState({ salaryadvances, salaryadvanceofpays })
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   // START Add salary advance
@@ -258,7 +255,7 @@ class ListSalaries extends React.Component {
     }
   }
 
-  submitSalaryAdvance = index => {
+  submitSalaryAdvance = async index => {
     if (this.validateSalaryAdvance(index)) {
       // Simple POST request with a JSON body using fetch
       let {
@@ -270,62 +267,55 @@ class ListSalaries extends React.Component {
       let salaryadvance = salaryadvances[index]
       salaryadvance.salary_id = salary_selected.id
 
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salaryadvance)
-      }
       if (salaryadvance.id === undefined) {
-        requestOptions.method = 'POST'
         // Desabilitar el Checkbox
         document.getElementById(
           'checkbox' + (salaryadvanceofpays.length + index)
         ).disabled = true
 
-        fetch('https://ats.auditwhole.com/salaryadvances', requestOptions)
-          .then(res => res.json())
-          .then(({ salaryadvance }) => {
-            // Habilitar el Checkbox
-            document.getElementById(
-              'checkbox' + (salaryadvanceofpays.length + index)
-            ).disabled = false
-            // Poner el anticipo guardado
-            salaryadvances[index].edit = true
-            // Agregar el atributo id
-            salaryadvances[index].id = salaryadvance.id
-            // sumar el atributo paid el monto del salaryadvance
-            let fi = salaries.findIndex(s => s.id === salary_selected.id)
-            salaries[fi].paid += Number(salaryadvance.amount)
-            this.setState({ salaries, salaryadvances })
-          })
-          .catch(() => {
-            alert('Se produjo un error')
-          })
+        try {
+          await axios
+            .post(`salaryadvances`, salaryadvance)
+            .then(({ data: { salaryadvance } }) => {
+              // Habilitar el Checkbox
+              document.getElementById(
+                'checkbox' + (salaryadvanceofpays.length + index)
+              ).disabled = false
+              // Poner el anticipo guardado
+              salaryadvances[index].edit = true
+              // Agregar el atributo id
+              salaryadvances[index].id = salaryadvance.id
+              // sumar el atributo paid el monto del salaryadvance
+              let fi = salaries.findIndex(s => s.id === salary_selected.id)
+              salaries[fi].paid += Number(salaryadvance.amount)
+              this.setState({ salaries, salaryadvances })
+            })
+        } catch (err) {
+          console.log(err)
+        }
       } else {
-        requestOptions.method = 'PUT'
         // Desabilitar el Checkbox
         document.getElementById(
           'checkbox' + (salaryadvanceofpays.length + index)
         ).disabled = true
 
-        fetch(
-          'https://ats.auditwhole.com/salaryadvances/' + salaryadvance.id,
-          requestOptions
-        )
-          .then(res => res.json())
-          .then(({ salaryadvance }) => {
-            // Habilitar el Checkbox
-            document.getElementById(
-              'checkbox' + (salaryadvanceofpays.length + index)
-            ).disabled = false
-            // Poner el anticipo guardado
-            salaryadvances[index].edit = true
-            this.setState({ salaryadvances })
-            // Volver a calcular el pagado
-            this.recalculatePaid()
-          })
-          .catch(() => {
-            alert('Se produjo un error')
-          })
+        try {
+          await axios
+            .put(`salaryadvances/${salaryadvance.id}`, salaryadvance)
+            .then(({ data: { salaryadvance } }) => {
+              // Habilitar el Checkbox
+              document.getElementById(
+                'checkbox' + (salaryadvanceofpays.length + index)
+              ).disabled = false
+              // Poner el anticipo guardado
+              salaryadvances[index].edit = true
+              this.setState({ salaryadvances })
+              // Volver a calcular el pagado
+              this.recalculatePaid()
+            })
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   }
@@ -386,18 +376,22 @@ class ListSalaries extends React.Component {
     }
   }
 
-  deleteItem = id => {
-    fetch('https://ats.auditwhole.com/salaryadvances/' + id, {
-      method: 'DELETE'
-    }).then(() => {
-      let { salaryadvances } = this.state
-      salaryadvances = salaryadvances.filter(e => e.id !== id)
-      this.setState({
-        salaryadvances,
-        item_id: 0
-      })
-      this.recalculatePaid()
-    })
+  deleteItem = async id => {
+    try {
+      await axios
+        .delete(`salaryadvances/${id}`)
+        .then(() => {
+          let { salaryadvances } = this.state
+          salaryadvances = salaryadvances.filter(e => e.id !== id)
+          this.setState({
+            salaryadvances,
+            item_id: 0
+          })
+          this.recalculatePaid()
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   // END Add salary advance
@@ -458,62 +452,51 @@ class ListSalaries extends React.Component {
     }
   }
 
-  submitSalaryAdvanceofpays = index => {
+  submitSalaryAdvanceofpays = async index => {
     if (this.validateSalaryAdvanceOfPay(index)) {
       // Simple POST request with a JSON body using fetch
       let { salaryadvanceofpays, salaries, salary_selected } = this.state
       let salaryadvanceofpay = salaryadvanceofpays[index]
       salaryadvanceofpay.salary_id = salary_selected.id
 
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salaryadvanceofpay)
-      }
       if (salaryadvanceofpay.id === undefined) {
-        requestOptions.method = 'POST'
-        // Desabilitar el Checkbox
         document.getElementById('checkbox' + index).disabled = true
 
-        fetch('https://ats.auditwhole.com/salaryadvanceofpays', requestOptions)
-          .then(res => res.json())
-          .then(({ salaryadvanceofpay }) => {
-            // Habilitar el Checkbox
-            document.getElementById('checkbox' + index).disabled = false
-            // Poner el anticipo guardado
-            salaryadvanceofpays[index].edit = true
-            // Agregar el atributo id
-            salaryadvanceofpays[index].id = salaryadvanceofpay.id
-            // sumar el atributo paid de salarios el monto del salaryadvanceofpay
-            let fi = salaries.findIndex(s => s.id === salary_selected.id)
-            salaries[fi].paid += Number(salaryadvanceofpay.amount)
-            this.setState({ salaries, salaryadvanceofpays })
-          })
-          .catch(() => {
-            alert('Se produjo un error')
-          })
+        try {
+          await axios
+            .post(`salaryadvanceofpays`, salaryadvanceofpay)
+            .then(({ data: { salaryadvanceofpay } }) => {
+              // Habilitar el Checkbox
+              document.getElementById('checkbox' + index).disabled = false
+              // Poner el anticipo guardado
+              salaryadvanceofpays[index].edit = true
+              // Agregar el atributo id
+              salaryadvanceofpays[index].id = salaryadvanceofpay.id
+              // sumar el atributo paid de salarios el monto del salaryadvanceofpay
+              let fi = salaries.findIndex(s => s.id === salary_selected.id)
+              salaries[fi].paid += Number(salaryadvanceofpay.amount)
+              this.setState({ salaries, salaryadvanceofpays })
+            })
+        } catch (err) {
+          console.log(err)
+        }
       } else {
-        requestOptions.method = 'PUT'
-        // Desabilitar el Checkbox
         document.getElementById('checkbox' + index).disabled = true
-
-        fetch(
-          'https://ats.auditwhole.com/salaryadvanceofpays/' +
-            salaryadvanceofpay.id,
-          requestOptions
-        )
-          .then(res => res.json())
-          .then(({ salaryadvance }) => {
-            // Habilitar el Checkbox
-            document.getElementById('checkbox' + index).disabled = false
-            // Poner el anticipo guardado
-            salaryadvanceofpays[index].edit = true
-            this.setState({ salaryadvanceofpays })
-            // Volver a calcular el pagado
-            this.recalculatePaid()
-          })
-          .catch(() => {
-            alert('Se produjo un error')
-          })
+        try {
+          await axios
+            .put(`salaryadvanceofpays/${salaryadvanceofpay.id}`, salaryadvanceofpay)
+            .then(() => {
+              // Habilitar el Checkbox
+              document.getElementById('checkbox' + index).disabled = false
+              // Poner el anticipo guardado
+              salaryadvanceofpays[index].edit = true
+              this.setState({ salaryadvanceofpays })
+              // Volver a calcular el pagado
+              this.recalculatePaid()
+            })
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   }
@@ -568,18 +551,22 @@ class ListSalaries extends React.Component {
     }
   }
 
-  deleteItemOfPay = id => {
-    fetch('https://ats.auditwhole.com/salaryadvanceofpays/' + id, {
-      method: 'DELETE'
-    }).then(() => {
-      let { salaryadvanceofpays } = this.state
-      salaryadvanceofpays = salaryadvanceofpays.filter(e => e.id !== id)
-      this.setState({
-        salaryadvanceofpays,
-        item_id_of_pay: 0
-      })
-      this.recalculatePaid()
-    })
+  deleteItemOfPay = async id => {
+    try {
+      await axios
+        .delete(`salaryadvanceofpays/${id}`)
+        .then(() => {
+          let { salaryadvanceofpays } = this.state
+          salaryadvanceofpays = salaryadvanceofpays.filter(e => e.id !== id)
+          this.setState({
+            salaryadvanceofpays,
+            item_id_of_pay: 0
+          })
+          this.recalculatePaid()
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   completePay = () => {
@@ -591,7 +578,7 @@ class ListSalaries extends React.Component {
     }))
   }
 
-  render () {
+  render() {
     let {
       type_salary,
       modal,
@@ -672,42 +659,42 @@ class ListSalaries extends React.Component {
                         <tbody style={{ cursor: 'pointer' }}>
                           {salaries.length > 0
                             ? salaries.map((salary, index) => (
-                                <tr
-                                  onClick={() => this.onSelectSalary(salary)}
-                                  key={`salary${index}`}
-                                  className={
-                                    salary_selected !== null &&
+                              <tr
+                                onClick={() => this.onSelectSalary(salary)}
+                                key={`salary${index}`}
+                                className={
+                                  salary_selected !== null &&
                                     salary_selected.id === salary.id
-                                      ? 'table-active'
-                                      : null
+                                    ? 'table-active'
+                                    : null
+                                }
+                              >
+                                {/* -1 Por que se refiere a la posicion del array */}
+                                <td>
+                                  {
+                                    months[salary.month.substring(5) - 1]
+                                      .description
                                   }
-                                >
-                                  {/* -1 Por que se refiere a la posicion del array */}
-                                  <td>
-                                    {
-                                      months[salary.month.substring(5) - 1]
-                                        .description
-                                    }
-                                  </td>
-                                  <td>{salary.amount}</td>
-                                  <td>
-                                    {(
-                                      salary.balance +
-                                      salary.amount_cheque +
-                                      salary.paid +
-                                      salary.cash
-                                    ).toFixed(2)}
-                                  </td>
-                                  <td>
-                                    {(
-                                      salary.amount -
-                                      salary.balance -
-                                      salary.amount_cheque -
-                                      salary.paid -
-                                      salary.cash
-                                    ).toFixed(2)}
-                                  </td>
-                                  {/* <td>
+                                </td>
+                                <td>{salary.amount}</td>
+                                <td>
+                                  {(
+                                    salary.balance +
+                                    salary.amount_cheque +
+                                    salary.paid +
+                                    salary.cash
+                                  ).toFixed(2)}
+                                </td>
+                                <td>
+                                  {(
+                                    salary.amount -
+                                    salary.balance -
+                                    salary.amount_cheque -
+                                    salary.paid -
+                                    salary.cash
+                                  ).toFixed(2)}
+                                </td>
+                                {/* <td>
                                     <Button
                                       className='font-icon-sm pb-0 pt-1'
                                       color='success'
@@ -716,8 +703,8 @@ class ListSalaries extends React.Component {
                                       <i className='pe-7s-cash'></i>
                                     </Button>
                                   </td> */}
-                                </tr>
-                              ))
+                              </tr>
+                            ))
                             : null}
                         </tbody>
                       </Table>

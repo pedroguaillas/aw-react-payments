@@ -32,7 +32,7 @@ class FormElementsControls extends React.Component {
     option: 'CREATE'
   }
 
-  async componentDidMount () {
+  async componentDidMount() {
     let { search } = this.state
 
     try {
@@ -89,10 +89,11 @@ class FormElementsControls extends React.Component {
 
   onChangeSearch = async e => {
     let { value } = e.target
+    let { meta } = this.state
 
     try {
       if (value.length > 2) {
-        await axios.post('customerlist', { search: value }).then(res => {
+        await axios.post(meta.path, { search: value }).then(res => {
           let { data, links, meta } = res.data
           this.setState({ search: value, customers: data, links, meta })
         })
@@ -105,13 +106,7 @@ class FormElementsControls extends React.Component {
   }
 
   newCustom = () => {
-    let custom = {
-      ruc: '',
-      razonsocial: '',
-      sri: '',
-      amount: '',
-      user_id: 0
-    }
+    let custom = { ruc: '', razonsocial: '', sri: '', amount: '', user_id: 0 }
     let option = 'CREATE'
     this.setState({ modal: true, custom, option })
   }
@@ -229,7 +224,7 @@ class FormElementsControls extends React.Component {
     }
   }
 
-  render () {
+  render() {
     let { customers, search, links, meta, modal, custom, users } = this.state
 
     return (
@@ -301,34 +296,34 @@ class FormElementsControls extends React.Component {
                         <tbody>
                           {customers.length > 0
                             ? customers.map((customer, index) => (
-                                <tr key={index}>
-                                  <td>{customer.ruc}</td>
-                                  <td>{customer.atts.razonsocial}</td>
-                                  <td style={{ 'text-transform': 'uppercase' }}>
-                                    {customer.atts.name}
-                                  </td>
-                                  <td>${customer.atts.amount}</td>
-                                  <td>
-                                    <ButtonGroup size='sm'>
-                                      <Button
-                                        onClick={() => this.edit(customer.ruc)}
-                                        color='primary'
-                                        title='Editar cliente'
-                                        className='me-2'
-                                      >
-                                        <i className='nav-link-icon lnr-pencil'></i>
-                                      </Button>
-                                      <Link
-                                        to={'/app/cliente/' + customer.ruc}
-                                        className='btn btn-success'
-                                        title='Lista de pagos'
-                                      >
-                                        <i className='pe-7s-cash'></i>
-                                      </Link>
-                                    </ButtonGroup>
-                                  </td>
-                                </tr>
-                              ))
+                              <tr key={index}>
+                                <td>{customer.ruc}</td>
+                                <td>{customer.atts.razonsocial}</td>
+                                <td style={{ 'text-transform': 'uppercase' }}>
+                                  {customer.atts.name}
+                                </td>
+                                <td>${customer.atts.amount}</td>
+                                <td>
+                                  <ButtonGroup size='sm'>
+                                    <Button
+                                      onClick={() => this.edit(customer.ruc)}
+                                      color='primary'
+                                      title='Editar cliente'
+                                      className='me-2'
+                                    >
+                                      <i className='nav-link-icon lnr-pencil'></i>
+                                    </Button>
+                                    <Link
+                                      to={'/app/cliente/' + customer.ruc}
+                                      className='btn btn-success'
+                                      title='Lista de pagos'
+                                    >
+                                      <i className='pe-7s-cash'></i>
+                                    </Link>
+                                  </ButtonGroup>
+                                </td>
+                              </tr>
+                            ))
                             : null}
                         </tbody>
                       </Table>

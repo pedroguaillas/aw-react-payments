@@ -6,6 +6,7 @@ import PageTitle from '../../../Layout/AppMain/PageTitle'
 import FormPaymentModal from '../Payments/FormPaymentModal'
 
 import { months, types } from '../PaymentHelpers'
+import axios from '../../../api/axios'
 
 class SmartPayment extends React.Component {
   state = {
@@ -16,43 +17,37 @@ class SmartPayment extends React.Component {
     payment: {}
   }
 
-  componentDidMount () {
+  async componentDidMount() {
     const {
       match: { params }
     } = this.props
-    // Simple POST request with a JSON body using fetch
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ year: 2022, id: params.id })
+    try {
+      await axios
+        .post(`user/${params.id}/customers`, { year: 2022, id: params.id })
+        .then(({ data: { user, customers } }) => {
+          this.setState({ user, customers })
+        })
+    } catch (err) {
+      console.log(err)
     }
-    fetch(
-      'https://ats.auditwhole.com/user/' + params.id + '/customers',
-      requestOptions
-    )
-      .then(response => response.json())
-      .then(res => {
-        let { user, customers } = res
-        this.setState({ user, customers })
-      })
   }
 
-  onPays = ruc => {
-    fetch('https://ats.auditwhole.com/customers/' + ruc + '/payments')
-      .then(response => response.json())
-      .then(res => {
-        let { customer, payments, year, month } = res
-        this.setState({
-          customer,
-          payments,
-          payment: {
-            ...this.state.payment,
-            cliente_auditwhole_ruc: ruc
-          },
-          year,
-          month
+  onPays = async ruc => {
+    try {
+      await axios
+        .get(`customers/${ruc}/payments`)
+        .then(({ data: { customer, payments, year, month } }) => {
+          this.setState({
+            customer, payments,
+            payment: {
+              ...this.state.payment,
+              cliente_auditwhole_ruc: ruc
+            }, year, month
+          })
         })
-      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   //Show modal
@@ -89,48 +84,38 @@ class SmartPayment extends React.Component {
     this.handleChange(e)
   }
 
-  submit = () => {
+  submit = async () => {
     if (this.validate()) {
       // Simple POST request with a JSON body using fetch
       let { payment } = this.state
-      const requestOptions = {
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payment)
-      }
       document.getElementById('btn-save').disabled = true
-      requestOptions.method = 'POST'
 
-      fetch('https://ats.auditwhole.com/payments', requestOptions)
-        .then(response => response.json())
-        .then(res => {
-          let { payments, customers, customer } = this.state
-          payments.unshift(res.payment)
-          let indexcustom = customers.findIndex(
-            item => item.ruc === customer.ruc
-          )
-          customers[indexcustom].total = payments.reduce(
-            (sum, payment) => sum + Number(payment.amount),
-            0
-          )
-          let { month, year } = res.payment
-          if (month === 12) {
-            month = 1
-            year++
-          } else {
-            month++
-          }
-          this.setState({
-            modal: false,
-            customers,
-            payments,
-            year,
-            month
+      try {
+        await axios
+          .post('payments', payment)
+          .then(res => {
+            let { payments, customers, customer } = this.state
+            payments.unshift(res.data.payment)
+            let indexcustom = customers.findIndex(
+              item => item.ruc === customer.ruc
+            )
+            customers[indexcustom].total = payments.reduce(
+              (sum, payment) => sum + Number(payment.amount),
+              0
+            )
+            let { month, year } = res.data.payment
+            if (month === 12) {
+              month = 1
+              year++
+            } else {
+              month++
+            }
+            this.setState({ modal: false, customers, payments, year, month })
+            document.getElementById('btn-save').disabled = false
           })
-          document.getElementById('btn-save').disabled = false
-        })
-        .catch(() => {
-          alert('Ya existe un cobro de ese mes')
-        })
+      } catch (err) {
+        console.log(err)
+      }
     }
   }
 
@@ -145,25 +130,28 @@ class SmartPayment extends React.Component {
     return true
   }
 
-  viewPdf = () => {
+  viewPdf = async () => {
     const {
       match: { params }
     } = this.props
-    fetch('https://ats.auditwhole.com/customerpdf/' + params.id, {
-      responseType: 'blob'
-    })
-      .then(res => res.blob())
-      .then(pdf => {
-        //Create a Blob from the PDF Stream
-        const file = new Blob([pdf], { type: 'application/pdf' })
-        //Build a URL from the file
-        const fileURL = URL.createObjectURL(file)
-        //Open the URL on new Window
-        window.open(fileURL)
-      })
+
+    try {
+      await axios
+        .get(`customerpdf/${params.id}`, { responseType: 'blob' })
+        .then(({ data }) => {
+          //Create a Blob from the PDF Stream
+          const file = new Blob([data], { type: 'application/pdf' })
+          //Build a URL from the file
+          const fileURL = URL.createObjectURL(file)
+          //Open the URL on new Window
+          window.open(fileURL)
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
-  render () {
+  render() {
     let { user, customers, customer, payments, modal, payment } = this.state
     const totalpayments = payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
@@ -225,7 +213,7 @@ class SmartPayment extends React.Component {
                               key={index}
                               className={
                                 customer !== undefined &&
-                                customer.ruc === item.ruc
+                                  customer.ruc === item.ruc
                                   ? 'table-active'
                                   : null
                               }
@@ -268,9 +256,8 @@ class SmartPayment extends React.Component {
                 <Col lg={5}>
                   <Card className='main-card'>
                     <div className='card-header'>
-                      {`${
-                        customer === undefined ? 'Pagos' : customer.razonsocial
-                      }`}
+                      {`${customer === undefined ? 'Pagos' : customer.razonsocial
+                        }`}
                       {customer === undefined ? null : (
                         <div className='btn-actions-pane-right'>
                           <div role='group' className='btn-group-sm btn-group'>
@@ -301,17 +288,15 @@ class SmartPayment extends React.Component {
                               <td>{months[payment.month - 1].description}</td>
                               <td style={{ 'text-align': 'center' }}>
                                 <div
-                                  className={`badge bg-${
-                                    types.find(
-                                      type => type.code === payment.type
-                                    ).color
-                                  }`}
+                                  className={`badge bg-${types.find(
+                                    type => type.code === payment.type
+                                  ).color
+                                    }`}
                                 >
-                                  {`${payment.type}${
-                                    payment.voucher !== null
-                                      ? ' #' + payment.voucher
-                                      : ''
-                                  }`}
+                                  {`${payment.type}${payment.voucher !== null
+                                    ? ' #' + payment.voucher
+                                    : ''
+                                    }`}
                                 </div>
                               </td>
                               <td className='text-center'>{payment.date}</td>

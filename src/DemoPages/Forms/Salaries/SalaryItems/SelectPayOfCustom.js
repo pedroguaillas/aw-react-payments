@@ -10,6 +10,7 @@ import {
   Button,
   Table
 } from 'reactstrap'
+import axios from '../../../../api/axios'
 
 import { months } from './../../PaymentHelpers'
 
@@ -21,13 +22,13 @@ class SelectPayOfCustom extends Component {
     payments: []
   }
 
-  componentDidMount () {
+  componentDidMount() {
     let { id, salaryadvanceofpays } = this.props
     let items =
       salaryadvanceofpays.length !== 0 && id > 0
         ? salaryadvanceofpays.filter(
-            salaryadvancesofpay => salaryadvancesofpay.id === id
-          )
+          salaryadvancesofpay => salaryadvancesofpay.id === id
+        )
         : null
     if (items !== null && items.length > 0) {
       let { razonsocial, month, amount } = items[0]
@@ -41,36 +42,36 @@ class SelectPayOfCustom extends Component {
     this.setState(state => ({ modal: !state.modal }))
   }
 
-  showModal = () => {
-    fetch(
-      `https://ats.auditwhole.com/user/${this.props.user_id}/customerswidthcross`
-    )
-      .then(res => res.json())
-      .then(({ customers }) => {
-        if (customers.length > 0) {
-          this.setState(state => ({ customers, modal: !state.modal }))
-        } else {
-          alert('Este usuario no tiene clientes con pagos tipo cruce')
-        }
-      })
+  showModal = async () => {
+    try {
+      await axios
+        .get(`user/${this.props.user_id}/customerswidthcross`)
+        .then(({ data: { customers } }) => {
+          if (customers.length > 0) {
+            this.setState(state => ({ customers, modal: !state.modal }))
+          } else {
+            alert('Este usuario no tiene clientes con pagos tipo cruce')
+          }
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
-  onChange = customer_selected => e => {
+  onChange = customer_selected => async e => {
     e.preventDefault()
-    fetch(
-      `https://ats.auditwhole.com/custom/${customer_selected.RUC}/paymentcross`
-    )
-      .then(res => res.json())
-      .then(({ payments }) => {
-        if (payments.length > 0) {
+    try {
+      await axios
+        .get(`custom/${customer_selected.RUC}/paymentcross`)
+        .then(({ data: { payments } }) => {
           let { customers } = this.state
           let index = customers.findIndex(c => (c.RUC = customer_selected.RUC))
           customers[index].select = false
           this.setState({ payments, customers, customer_selected })
-        } else {
-          alert('No tiene pagos con cruce')
-        }
-      })
+        })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   onSelectPay = pay => {
@@ -78,9 +79,8 @@ class SelectPayOfCustom extends Component {
 
     let { selectPay, index } = this.props
     if (selectPay(pay, index)) {
-      let item = `${customer_selected.razonsocial} - ${
-        months[pay.month - 1].description
-      } - ${pay.amount}`
+      let item = `${customer_selected.razonsocial} - ${months[pay.month - 1].description
+        } - ${pay.amount}`
 
       this.setState(state => ({ item, modal: !state.modal }))
     }
@@ -131,7 +131,7 @@ class SelectPayOfCustom extends Component {
                         key={`customer${index}`}
                         className={
                           customer_selected !== null &&
-                          customer_selected.RUC === customer.RUC
+                            customer_selected.RUC === customer.RUC
                             ? 'table-active'
                             : null
                         }
