@@ -2,6 +2,7 @@ import { Route, Redirect } from 'react-router-dom'
 import React, { Suspense, lazy, Fragment } from 'react'
 
 import { ToastContainer } from 'react-toastify'
+import PrivateRoute from './PrivateRoute'
 
 const Dashboards = lazy(() => import('../../DemoPages/Dashboards'))
 
@@ -26,7 +27,7 @@ const AppMain = () => {
           </div>
         }
       >
-        <Route path='/app' component={Forms} />
+        <PrivateRoute path='/app' component={Forms} />
       </Suspense>
 
       {/* Dashboards */}
@@ -43,7 +44,7 @@ const AppMain = () => {
           </div>
         }
       >
-        <Route path='/dashboards' component={Dashboards} />
+        <PrivateRoute path='/dashboard' component={Dashboards} />
       </Suspense>
 
       {/* Login */}
@@ -63,10 +64,10 @@ const AppMain = () => {
         <Route path='/login' component={Login} />
       </Suspense>
 
-      <Route
+      <PrivateRoute
         exact
         path='/'
-        render={() => <Redirect to='/dashboards/basic' />}
+        render={() => <Redirect to='/dashboard/basic' />}
       />
       <ToastContainer />
     </Fragment>

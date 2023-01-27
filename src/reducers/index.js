@@ -1,5 +1,7 @@
-import ThemeOptions from './ThemeOptions';
+import ThemeOptions from './ThemeOptions'
+import AuthOptions from './AuthOptions'
 
 export default {
-    ThemeOptions
-};
+  ThemeOptions,
+  AuthOptions
+}

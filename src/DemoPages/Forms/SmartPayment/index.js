@@ -6,7 +6,7 @@ import PageTitle from '../../../Layout/AppMain/PageTitle'
 import FormPaymentModal from '../Payments/FormPaymentModal'
 
 import { months, types } from '../PaymentHelpers'
-import axios from '../../../api/axios'
+import axios from '../../../services/api'
 
 class SmartPayment extends React.Component {
   state = {

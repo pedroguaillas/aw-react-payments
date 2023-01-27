@@ -14,7 +14,7 @@ import {
   CardHeader,
   ButtonGroup
 } from 'reactstrap'
-import axios from '../../../api/axios'
+import axios from '../../../services/api'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
 import FormCustomModal from './FormCustomModal'

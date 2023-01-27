@@ -30,7 +30,8 @@ import avatar4 from '../../../assets/utils/images/avatars/4.jpg'
 import ByMonth from './ByMonth'
 import ByType from './ByType'
 import ByRangePay from './ByRangePay'
-import axios from '../../../api/axios'
+
+import api from '../../../services/api'
 
 const data = [
   { name: 'Page A', uv: 4000, pv: 2400, amt: 2400 },
@@ -63,7 +64,7 @@ export default class AnalyticsDashboard1 extends Component {
 
   async componentDidMount () {
     try {
-      await axios
+      await api
         .get('dashboard')
         .then(
           ({

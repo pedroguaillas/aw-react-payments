@@ -15,7 +15,7 @@ import SalaryItems from './SalaryItems'
 import FormSalaryModal from './FormSalaryModal'
 import { months } from '../PaymentHelpers'
 import DialogDelete from '../../Components/DialogDelete'
-import axios from '../../../api/axios'
+import axios from '../../../services/api'
 
 class ListSalaries extends React.Component {
   state = {

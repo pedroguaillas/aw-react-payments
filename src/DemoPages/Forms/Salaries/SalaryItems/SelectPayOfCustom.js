@@ -10,7 +10,7 @@ import {
   Button,
   Table
 } from 'reactstrap'
-import axios from '../../../../api/axios'
+import axios from '../../../../services/api'
 
 import { months } from './../../PaymentHelpers'
 

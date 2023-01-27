@@ -16,7 +16,7 @@ import Paginate from '../../Components/Paginate/Index'
 
 import FormPaymentModal from './FormPaymentModal'
 import { months, types } from './../PaymentHelpers'
-import axios from '../../../api/axios'
+import axios from '../../../services/api'
 
 class Payments extends React.Component {
   state = {
