@@ -30,7 +30,7 @@ class Payments extends React.Component {
     meta: null
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     const {
       match: { params }
     } = this.props
@@ -38,13 +38,14 @@ class Payments extends React.Component {
     try {
       await axios
         .post('paymentlist', { ruc: params.ruc })
-        .then(({ data: { customer, payments, year, month } }) => {
+        .then(({ data: { customer, payments } }) => {
           this.setState({
-            customer, payments,
+            customer,
+            payments,
             payment: {
               ...this.state.payment,
               cliente_auditwhole_ruc: params.ruc
-            }, year, month
+            }
           })
         })
     } catch (err) {
@@ -60,16 +61,40 @@ class Payments extends React.Component {
     const {
       match: { params }
     } = this.props
-    let { year, month, customer } = this.state
+    let { customer } = this.state
     let payment = {
-      year,
-      month,
+      year_month: this.calMonth(),
       cliente_auditwhole_ruc: params.ruc,
       type: 'Efectivo',
       amount: customer.amount,
       date
     }
     this.setState(state => ({ modal: !state.modal, payment }))
+  }
+
+  calMonth = () => {
+    let { payments } = this.state
+
+    if (payments.length === 0) {
+      let date = new Date()
+      date.setMonth(date.getMonth() - 1)
+      return date.toISOString().substring(0, 7)
+    }
+
+    let arrMonth = payments[0].atts.year_month.split('-')
+
+    if (arrMonth[1] === '12') {
+      // Mes de Diciembre a Enero
+      arrMonth[1] = '01'
+      // Se suma un año mas
+      arrMonth[0] = parseInt(arrMonth[0]) + 1
+    } else {
+      // Se suma el mes
+      let newMonth = parseInt(arrMonth[1]) + 1
+      arrMonth[1] = newMonth < 10 ? '0' + newMonth : newMonth
+    }
+
+    return arrMonth.join('-')
   }
 
   toogleEdit = pay => {
@@ -110,21 +135,12 @@ class Payments extends React.Component {
         document.getElementById('btn-save').disabled = true
 
         try {
-          await axios
-            .post('payments', payment)
-            .then(({ data }) => {
-              let { payments } = this.state
-              payments.unshift({ atts: data.payment })
-              let { month, year } = data.payment
-              if (month === 12) {
-                month = 1
-                year++
-              } else {
-                month++
-              }
-              this.setState({ modal: false, payments, year, month })
-              document.getElementById('btn-save').disabled = false
-            })
+          await axios.post('payments', payment).then(({ data }) => {
+            let { payments } = this.state
+            payments.unshift({ id: data.payment, atts: data.payment })
+            this.setState({ modal: false, payments })
+            document.getElementById('btn-save').disabled = false
+          })
         } catch (err) {
           console.log(err)
         }
@@ -135,11 +151,12 @@ class Payments extends React.Component {
             .put(`payments/${payment.id}`, payment)
             .then(({ data }) => {
               let { payments } = this.state
-              var { year, month, amount, type, voucher, note, date } = data.payment
+              var { amount, type, voucher, note, date, year_month } =
+                data.payment
               var index = payments.findIndex(e => e.id === payment.id)
               payments[index] = {
                 id: payment.id,
-                atts: { year, month, amount, type, voucher, note, date }
+                atts: { amount, type, voucher, note, date, year_month }
               }
               this.setState({ modal: false, payments })
               document.getElementById('btn-save').disabled = false
@@ -157,16 +174,14 @@ class Payments extends React.Component {
 
   deleteItem = async id => {
     try {
-      await axios
-        .delete(`payments/${id}`)
-        .then(() => {
-          let { payments } = this.state
-          payments = payments.filter(e => e.id !== id)
-          this.setState({
-            payments,
-            item_id: 0
-          })
+      await axios.delete(`payments/${id}`).then(() => {
+        let { payments } = this.state
+        payments = payments.filter(e => e.id !== id)
+        this.setState({
+          payments,
+          item_id: 0
         })
+      })
     } catch (err) {
       console.log(err)
     }
@@ -183,16 +198,9 @@ class Payments extends React.Component {
     return true
   }
 
-  render() {
-    let {
-      payments,
-      payment,
-      customer,
-      item_id,
-      links,
-      modal,
-      meta
-    } = this.state
+  render () {
+    let { payments, payment, customer, item_id, links, modal, meta } =
+      this.state
 
     return (
       <Fragment>
@@ -259,21 +267,25 @@ class Payments extends React.Component {
                           <tbody>
                             {payments.map((payment, index) => (
                               <tr key={index}>
-                                <td>{payment.atts.year}</td>
+                                <td>
+                                  {payment.atts.year_month.substring(0, 4)}
+                                </td>
                                 <td>
                                   {/* -1 porque se refiere a la posicion del array */}
                                   {
-                                    months[Number(payment.atts.month) - 1]
-                                      .description
+                                    months[
+                                      payment.atts.year_month.substring(5) - 1
+                                    ].description
                                   }
                                 </td>
                                 <td>${payment.atts.amount}</td>
                                 <td className='text-center'>
                                   <div
-                                    className={`badge bg-${types.find(
-                                      type => type.code === payment.atts.type
-                                    ).color
-                                      }`}
+                                    className={`badge bg-${
+                                      types.find(
+                                        type => type.code === payment.atts.type
+                                      ).color
+                                    }`}
                                   >
                                     {payment.atts.type}
                                   </div>

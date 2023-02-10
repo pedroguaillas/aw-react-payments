@@ -13,17 +13,12 @@ import {
   ModalFooter
 } from 'reactstrap'
 
-import { types, months } from './../PaymentHelpers'
+import { types } from './../PaymentHelpers'
 
 class FormPaymentModal extends Component {
   render = () => {
-    let {
-      payment,
-      handleChange,
-      toggle,
-      handleChangeNumber,
-      submit
-    } = this.props
+    let { payment, handleChange, toggle, handleChangeNumber, submit } =
+      this.props
 
     return (
       <Fragment>
@@ -43,23 +38,17 @@ class FormPaymentModal extends Component {
                 </p>
               </Row>
               <FormGroup className='mb-1' row>
-                <Label for='month' sm={4}>
+                <Label for='year_month' sm={4}>
                   Mes *
                 </Label>
                 <Col sm={8}>
-                  <select
-                    className='form form-control'
+                  <Input
+                    type='month'
                     onChange={handleChange}
-                    value={payment.month}
-                    name='month'
-                    id='month'
-                  >
-                    {months.map((month, index) => (
-                      <option key={`month${index}`} value={month.code}>
-                        {month.description}
-                      </option>
-                    ))}
-                  </select>
+                    value={payment.year_month}
+                    bsSize='sm'
+                    name='year_month'
+                  />
                 </Col>
               </FormGroup>
               <FormGroup className='mb-1' row>
