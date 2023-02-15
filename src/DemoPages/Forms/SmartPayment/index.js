@@ -17,7 +17,7 @@ class SmartPayment extends React.Component {
     payment: {}
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     const {
       match: { params }
     } = this.props
@@ -36,13 +36,14 @@ class SmartPayment extends React.Component {
     try {
       await axios
         .get(`customers/${ruc}/payments`)
-        .then(({ data: { customer, payments, year, month } }) => {
+        .then(({ data: { customer, payments } }) => {
           this.setState({
-            customer, payments,
+            customer,
+            payments,
             payment: {
               ...this.state.payment,
               cliente_auditwhole_ruc: ruc
-            }, year, month
+            }
           })
         })
     } catch (err) {
@@ -55,16 +56,40 @@ class SmartPayment extends React.Component {
     let date = new Date()
     date.setHours(date.getHours() - 5)
     date = date.toISOString().substring(0, 10)
-    let { year, month, customer } = this.state
+    let { customer } = this.state
     let payment = {
-      year,
-      month,
       cliente_auditwhole_ruc: customer.ruc,
       type: 'Efectivo',
       amount: customer.amount,
-      date
+      date,
+      year_month: this.calMonth()
     }
     this.setState(state => ({ modal: !state.modal, payment }))
+  }
+
+  calMonth = () => {
+    let { payments } = this.state
+
+    if (payments.length === 0) {
+      let date = new Date()
+      date.setMonth(date.getMonth() - 1)
+      return date.toISOString().substring(0, 7)
+    }
+
+    let arrMonth = payments[0].year_month.split('-')
+
+    if (arrMonth[1] === '12') {
+      // Mes de Diciembre a Enero
+      arrMonth[1] = '01'
+      // Se suma un año mas
+      arrMonth[0] = parseInt(arrMonth[0]) + 1
+    } else {
+      // Se suma el mes
+      let newMonth = parseInt(arrMonth[1]) + 1
+      arrMonth[1] = newMonth < 10 ? '0' + newMonth : newMonth
+    }
+
+    return arrMonth.join('-')
   }
 
   handleChange = e => {
@@ -91,28 +116,19 @@ class SmartPayment extends React.Component {
       document.getElementById('btn-save').disabled = true
 
       try {
-        await axios
-          .post('payments', payment)
-          .then(res => {
-            let { payments, customers, customer } = this.state
-            payments.unshift(res.data.payment)
-            let indexcustom = customers.findIndex(
-              item => item.ruc === customer.ruc
-            )
-            customers[indexcustom].total = payments.reduce(
-              (sum, payment) => sum + Number(payment.amount),
-              0
-            )
-            let { month, year } = res.data.payment
-            if (month === 12) {
-              month = 1
-              year++
-            } else {
-              month++
-            }
-            this.setState({ modal: false, customers, payments, year, month })
-            document.getElementById('btn-save').disabled = false
-          })
+        await axios.post('payments', payment).then(res => {
+          let { payments, customers, customer } = this.state
+          payments.unshift(res.data.payment)
+          let indexcustom = customers.findIndex(
+            item => item.ruc === customer.ruc
+          )
+          customers[indexcustom].total = payments.reduce(
+            (sum, payment) => sum + Number(payment.amount),
+            0
+          )
+          this.setState({ modal: false, customers, payments })
+          document.getElementById('btn-save').disabled = false
+        })
       } catch (err) {
         console.log(err)
       }
@@ -151,7 +167,7 @@ class SmartPayment extends React.Component {
     }
   }
 
-  render() {
+  render () {
     let { user, customers, customer, payments, modal, payment } = this.state
     const totalpayments = payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
@@ -213,7 +229,7 @@ class SmartPayment extends React.Component {
                               key={index}
                               className={
                                 customer !== undefined &&
-                                  customer.ruc === item.ruc
+                                customer.ruc === item.ruc
                                   ? 'table-active'
                                   : null
                               }
@@ -256,8 +272,9 @@ class SmartPayment extends React.Component {
                 <Col lg={5}>
                   <Card className='main-card'>
                     <div className='card-header'>
-                      {`${customer === undefined ? 'Pagos' : customer.razonsocial
-                        }`}
+                      {`${
+                        customer === undefined ? 'Pagos' : customer.razonsocial
+                      }`}
                       {customer === undefined ? null : (
                         <div className='btn-actions-pane-right'>
                           <div role='group' className='btn-group-sm btn-group'>
@@ -285,18 +302,25 @@ class SmartPayment extends React.Component {
                           {payments.map((payment, index) => (
                             <tr key={index}>
                               {/* -1 porque se refiere a la posicion del array */}
-                              <td>{months[payment.month - 1].description}</td>
+                              <td>
+                                {
+                                  months[payment.year_month.substring(5) - 1]
+                                    .description
+                                }
+                              </td>
                               <td style={{ 'text-align': 'center' }}>
                                 <div
-                                  className={`badge bg-${types.find(
-                                    type => type.code === payment.type
-                                  ).color
-                                    }`}
+                                  className={`badge bg-${
+                                    types.find(
+                                      type => type.code === payment.type
+                                    ).color
+                                  }`}
                                 >
-                                  {`${payment.type}${payment.voucher !== null
-                                    ? ' #' + payment.voucher
-                                    : ''
-                                    }`}
+                                  {`${payment.type}${
+                                    payment.voucher !== null
+                                      ? ' #' + payment.voucher
+                                      : ''
+                                  }`}
                                 </div>
                               </td>
                               <td className='text-center'>{payment.date}</td>

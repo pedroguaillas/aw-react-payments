@@ -20,6 +20,11 @@ class FormPaymentModal extends Component {
     let { payment, handleChange, toggle, handleChangeNumber, submit } =
       this.props
 
+    let date = new Date()
+    let minDate = new Date("2022-01-01")
+
+    date.setFullYear(date.getFullYear() + 1)
+
     return (
       <Fragment>
         <Modal
@@ -48,6 +53,8 @@ class FormPaymentModal extends Component {
                     value={payment.year_month}
                     bsSize='sm'
                     name='year_month'
+                    min={minDate.toISOString().substring(0, 7)}
+                    max={date.toISOString().substring(0, 7)}
                   />
                 </Col>
               </FormGroup>
