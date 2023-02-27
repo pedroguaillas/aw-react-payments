@@ -10,12 +10,12 @@ import {
 } from 'reactstrap'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
 
-import PageTitle from '../../../Layout/AppMain/PageTitle'
-import SalaryItems from './SalaryItems'
+import PageTitle from '../../../../Layout/AppMain/PageTitle'
 import FormSalaryModal from './FormSalaryModal'
-import { months } from '../PaymentHelpers'
-import DialogDelete from '../../Components/DialogDelete'
-import axios from '../../../services/api'
+import { months } from '../../PaymentHelpers'
+import DialogDelete from '../../../Components/DialogDelete'
+import axios from '../../../../services/api'
+import SalaryItems from './SalaryItems'
 
 class ListSalaries extends React.Component {
   state = {
@@ -284,12 +284,8 @@ class ListSalaries extends React.Component {
   submitSalaryAdvance = async index => {
     if (this.validateSalaryAdvance(index)) {
       // Simple POST request with a JSON body using fetch
-      let {
-        salaryadvances,
-        salaryadvanceofpays,
-        salaries,
-        salary_selected
-      } = this.state
+      let { salaryadvances, salaryadvanceofpays, salaries, salary_selected } =
+        this.state
       let salaryadvance = salaryadvances[index]
       salaryadvance.salary_id = salary_selected.id
 
@@ -348,12 +344,8 @@ class ListSalaries extends React.Component {
 
   // Volver a calcular el PAID cuando se edita o elimina un anticipo
   recalculatePaid = () => {
-    let {
-      salaries,
-      salary_selected,
-      salaryadvances,
-      salaryadvanceofpays
-    } = this.state
+    let { salaries, salary_selected, salaryadvances, salaryadvanceofpays } =
+      this.state
 
     let sum = Number(salaryadvances.reduce((s, sa) => s + Number(sa.amount), 0))
     sum += salaryadvanceofpays.reduce((s1, sdop) => s1 + Number(sdop.amount), 0)

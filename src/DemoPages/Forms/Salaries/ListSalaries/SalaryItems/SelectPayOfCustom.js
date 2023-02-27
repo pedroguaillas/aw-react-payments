@@ -10,9 +10,8 @@ import {
   Button,
   Table
 } from 'reactstrap'
-import axios from '../../../../services/api'
-
-import { months } from './../../PaymentHelpers'
+import axios from '../../../../../services/api'
+import { months } from '../../../PaymentHelpers'
 
 class SelectPayOfCustom extends Component {
   state = {
@@ -22,18 +21,18 @@ class SelectPayOfCustom extends Component {
     payments: []
   }
 
-  componentDidMount() {
+  componentDidMount () {
     let { id, salaryadvanceofpays } = this.props
     let items =
       salaryadvanceofpays.length !== 0 && id > 0
         ? salaryadvanceofpays.filter(
-          salaryadvancesofpay => salaryadvancesofpay.id === id
-        )
+            salaryadvancesofpay => salaryadvancesofpay.id === id
+          )
         : null
     if (items !== null && items.length > 0) {
-      let { razonsocial, month, amount } = items[0]
+      let { razonsocial, year_month, amount } = items[0]
       this.setState({
-        item: `${razonsocial} - ${months[month - 1].description} - ${amount}`
+        item: `${razonsocial} - ${months[year_month.substring(5) - 1].description} - ${amount}`
       })
     }
   }
@@ -79,8 +78,9 @@ class SelectPayOfCustom extends Component {
 
     let { selectPay, index } = this.props
     if (selectPay(pay, index)) {
-      let item = `${customer_selected.razonsocial} - ${months[pay.month - 1].description
-        } - ${pay.amount}`
+      let item = `${customer_selected.razonsocial} - ${
+        months[pay.year_month.substring(5) - 1].description
+      } - ${pay.amount}`
 
       this.setState(state => ({ item, modal: !state.modal }))
     }
@@ -131,7 +131,7 @@ class SelectPayOfCustom extends Component {
                         key={`customer${index}`}
                         className={
                           customer_selected !== null &&
-                            customer_selected.RUC === customer.RUC
+                          customer_selected.RUC === customer.RUC
                             ? 'table-active'
                             : null
                         }
@@ -171,7 +171,12 @@ class SelectPayOfCustom extends Component {
                           className='text-center'
                           key={`customer${index}`}
                         >
-                          <td>{months[payment.month - 1].description}</td>
+                          <td>
+                            {
+                              months[payment.year_month.substring(5) - 1]
+                                .description
+                            }
+                          </td>
                           <td>{payment.amount}</td>
                         </tr>
                       ))}

@@ -11,7 +11,7 @@ import {
   Label,
   ModalFooter
 } from 'reactstrap'
-import { months } from './../PaymentHelpers'
+import { months } from '../../PaymentHelpers'
 
 class FormSalaryModal extends Component {
   render = () => {

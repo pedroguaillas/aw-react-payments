@@ -8,8 +8,7 @@ import {
   Input,
   ButtonGroup
 } from 'reactstrap'
-import { months } from '../../PaymentHelpers'
-
+import { months } from '../../../PaymentHelpers'
 import SelectPayOfCustom from './SelectPayOfCustom'
 
 class SalaryItems extends React.Component {

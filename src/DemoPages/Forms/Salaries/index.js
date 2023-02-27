@@ -14,10 +14,9 @@ import {
   Input,
   Button
 } from 'reactstrap'
-import axios from '../../../services/api'
-
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
+import axios from '../../../services/api'
 import EditAmountSalaryModal from './EditAmountSalaryModal'
 
 class Users extends React.Component {
