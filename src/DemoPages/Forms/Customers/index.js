@@ -18,6 +18,7 @@ import axios from '../../../services/api'
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
 import FormCustomModal from './FormCustomModal'
+import FormSelectAsesorModal from './FormSelectAsesorModal'
 
 class FormElementsControls extends React.Component {
   state = {
@@ -29,10 +30,13 @@ class FormElementsControls extends React.Component {
     custom: {
       user_id: 0
     },
-    option: 'CREATE'
+    users: [],
+    option: 'CREATE',
+    searching: false,
+    user_id_selected: 0
   }
 
-  async componentDidMount() {
+  async componentDidMount () {
     let { search } = this.state
 
     try {
@@ -50,12 +54,13 @@ class FormElementsControls extends React.Component {
     e.preventDefault()
 
     if (page !== null) {
-      let { search, meta } = this.state
+      let { search, meta, user_id_selected } = this.state
 
       try {
         await axios
           .post(`${meta.path}?page=${page.substring(page.indexOf('=') + 1)}`, {
-            search
+            search,
+            user_id: user_id_selected
           })
           .then(res => {
             let { data, links, meta } = res.data
@@ -70,13 +75,17 @@ class FormElementsControls extends React.Component {
   reloadPage = async () => {
     let {
       search,
-      meta: { current_page, path }
+      meta: { current_page, path },
+      user_id_selected
     } = this.state
 
     if (current_page !== null) {
       try {
         await axios
-          .post(`${path}?page=${current_page}`, { search })
+          .post(`${path}?page=${current_page}`, {
+            search,
+            user_id: user_id_selected
+          })
           .then(res => {
             let { data, links, meta } = res.data
             this.setState({ customers: data, links, meta })
@@ -89,22 +98,36 @@ class FormElementsControls extends React.Component {
 
   onChangeSearch = async e => {
     let { value } = e.target
+    let { meta, searching } = this.state
+
+    this.setState({ search: value })
+
+    if (!searching) {
+      try {
+        this.setState({ searching: true })
+        await axios.post(meta.path, { search: value }).then(res => {
+          let { data, links, meta } = res.data
+          this.setState({ searching: false, customers: data, links, meta })
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  onChangeSearchByUser = async user_id => {
     let { meta } = this.state
 
     try {
-      if (value.length > 2) {
-        await axios.post(meta.path, { search: value }).then(res => {
-          let { data, links, meta } = res.data
-          this.setState({ search: value, customers: data, links, meta })
-        })
-      } else {
-        this.setState({ search: value })
-      }
+      this.setState({ user_id_selected: user_id })
+      await axios.post(meta.path, { user_id }).then(res => {
+        let { data, links, meta } = res.data
+        this.setState({ customers: data, links, meta })
+      })
     } catch (error) {
       console.log(error)
     }
   }
-
   newCustom = () => {
     let custom = { ruc: '', razonsocial: '', sri: '', amount: '', user_id: 0 }
     let option = 'CREATE'
@@ -224,7 +247,7 @@ class FormElementsControls extends React.Component {
     }
   }
 
-  render() {
+  render () {
     let { customers, search, links, meta, modal, custom, users } = this.state
 
     return (
@@ -269,6 +292,9 @@ class FormElementsControls extends React.Component {
                 <Col lg='12'>
                   <Card className='main-card mb-3'>
                     <CardHeader>
+                      <FormSelectAsesorModal
+                        onChangeSearchByUser={this.onChangeSearchByUser}
+                      />
                       <div className='btn-actions-pane-right'>
                         <Form className='text-right'>
                           <InputGroup size='sm'>
@@ -296,34 +322,34 @@ class FormElementsControls extends React.Component {
                         <tbody>
                           {customers.length > 0
                             ? customers.map((customer, index) => (
-                              <tr key={index}>
-                                <td>{customer.ruc}</td>
-                                <td>{customer.atts.razonsocial}</td>
-                                <td style={{ 'text-transform': 'uppercase' }}>
-                                  {customer.atts.name}
-                                </td>
-                                <td>${customer.atts.amount}</td>
-                                <td>
-                                  <ButtonGroup size='sm'>
-                                    <Button
-                                      onClick={() => this.edit(customer.ruc)}
-                                      color='primary'
-                                      title='Editar cliente'
-                                      className='me-2'
-                                    >
-                                      <i className='nav-link-icon lnr-pencil'></i>
-                                    </Button>
-                                    <Link
-                                      to={'/app/cliente/' + customer.ruc}
-                                      className='btn btn-success'
-                                      title='Lista de pagos'
-                                    >
-                                      <i className='pe-7s-cash'></i>
-                                    </Link>
-                                  </ButtonGroup>
-                                </td>
-                              </tr>
-                            ))
+                                <tr key={index}>
+                                  <td>{customer.ruc}</td>
+                                  <td>{customer.atts.razonsocial}</td>
+                                  <td style={{ 'text-transform': 'uppercase' }}>
+                                    {customer.atts.name}
+                                  </td>
+                                  <td>${customer.atts.amount}</td>
+                                  <td>
+                                    <ButtonGroup size='sm'>
+                                      <Button
+                                        onClick={() => this.edit(customer.ruc)}
+                                        color='primary'
+                                        title='Editar cliente'
+                                        className='me-2'
+                                      >
+                                        <i className='nav-link-icon lnr-pencil'></i>
+                                      </Button>
+                                      <Link
+                                        to={'/app/cliente/' + customer.ruc}
+                                        className='btn btn-success'
+                                        title='Lista de pagos'
+                                      >
+                                        <i className='pe-7s-cash'></i>
+                                      </Link>
+                                    </ButtonGroup>
+                                  </td>
+                                </tr>
+                              ))
                             : null}
                         </tbody>
                       </Table>
