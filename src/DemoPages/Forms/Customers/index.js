@@ -19,6 +19,7 @@ import PageTitle from '../../../Layout/AppMain/PageTitle'
 import Paginate from '../../Components/Paginate/Index'
 import FormCustomModal from './FormCustomModal'
 import FormSelectAsesorModal from './FormSelectAsesorModal'
+import DialogDelete from '../../Components/DialogDelete'
 
 class FormElementsControls extends React.Component {
   state = {
@@ -33,7 +34,8 @@ class FormElementsControls extends React.Component {
     users: [],
     option: 'CREATE',
     searching: false,
-    user_id_selected: 0
+    user_id_selected: 0,
+    ruc_delete: ''
   }
 
   async componentDidMount () {
@@ -247,8 +249,20 @@ class FormElementsControls extends React.Component {
     }
   }
 
+  deleteItem = async ruc => {
+    try {
+      await axios.delete(`customers/${ruc}/delete`).then(() => {
+        this.reloadPage()
+        this.setState({ ruc_delete: '' })
+      })
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   render () {
-    let { customers, search, links, meta, modal, custom, users } = this.state
+    let { customers, search, links, meta, modal, custom, users, ruc_delete } =
+      this.state
 
     return (
       <Fragment>
@@ -291,6 +305,11 @@ class FormElementsControls extends React.Component {
               <Row>
                 <Col lg='12'>
                   <Card className='main-card mb-3'>
+                    <DialogDelete
+                      item_id={ruc_delete}
+                      deleteItem={this.deleteItem}
+                      title='Cliente'
+                    />
                     <CardHeader>
                       <FormSelectAsesorModal
                         onChangeSearchByUser={this.onChangeSearchByUser}
@@ -331,6 +350,18 @@ class FormElementsControls extends React.Component {
                                   <td>${customer.atts.amount}</td>
                                   <td>
                                     <ButtonGroup size='sm'>
+                                      <Button
+                                        onClick={() =>
+                                          this.setState({
+                                            ruc_delete: customer.ruc
+                                          })
+                                        }
+                                        color='danger'
+                                        title='Eliminar cliente'
+                                        className='me-2'
+                                      >
+                                        <i className='nav-link-icon lnr-trash'></i>
+                                      </Button>
                                       <Button
                                         onClick={() => this.edit(customer.ruc)}
                                         color='primary'
