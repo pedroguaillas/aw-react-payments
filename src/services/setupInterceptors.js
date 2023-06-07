@@ -20,7 +20,7 @@ const setup = store => {
             let headers = { 'Content-Type': 'application/json' }
             headers['Authorization'] = `Bearer ${token}`
             const url = process.env.REACT_APP_BACKEND_URL
-            await fetch(`${url}api/refreshtoken`, {
+            await fetch(`${url}refreshtoken`, {
               method: 'GET',
               headers
             })

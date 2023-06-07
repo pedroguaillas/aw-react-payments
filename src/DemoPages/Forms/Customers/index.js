@@ -20,6 +20,8 @@ import Paginate from '../../Components/Paginate/Index'
 import FormCustomModal from './FormCustomModal'
 import FormSelectAsesorModal from './FormSelectAsesorModal'
 import DialogDelete from '../../Components/DialogDelete'
+import { withRouter } from 'react-router-dom/cjs/react-router-dom'
+import { connect } from 'react-redux'
 
 class FormElementsControls extends React.Component {
   state = {
@@ -264,6 +266,8 @@ class FormElementsControls extends React.Component {
     let { customers, search, links, meta, modal, custom, users, ruc_delete } =
       this.state
 
+    let { rol } = this.props
+
     return (
       <Fragment>
         <TransitionGroup>
@@ -334,7 +338,7 @@ class FormElementsControls extends React.Component {
                             <th style={{ width: '7em' }}>RUC</th>
                             <th>RAZON SOCIAL</th>
                             <th>AESESOR</th>
-                            <th>VALOR</th>
+                            {rol === 'admin' ? <th>VALOR</th> : null}
                             <th style={{ width: '5em' }}></th>
                           </tr>
                         </thead>
@@ -347,7 +351,9 @@ class FormElementsControls extends React.Component {
                                   <td style={{ 'text-transform': 'uppercase' }}>
                                     {customer.atts.name}
                                   </td>
-                                  <td>${customer.atts.amount}</td>
+                                  {rol === 'admin' ? (
+                                    <td>${customer.atts.amount}</td>
+                                  ) : null}
                                   <td>
                                     <ButtonGroup size='sm'>
                                       <Button
@@ -370,13 +376,15 @@ class FormElementsControls extends React.Component {
                                       >
                                         <i className='nav-link-icon lnr-pencil'></i>
                                       </Button>
-                                      <Link
-                                        to={'/app/cliente/' + customer.ruc}
-                                        className='btn btn-success'
-                                        title='Lista de pagos'
-                                      >
-                                        <i className='pe-7s-cash'></i>
-                                      </Link>
+                                      {this.props.rol === 'admin' ? (
+                                        <Link
+                                          to={'/app/cliente/' + customer.ruc}
+                                          className='btn btn-success'
+                                          title='Lista de pagos'
+                                        >
+                                          <i className='pe-7s-cash'></i>
+                                        </Link>
+                                      ) : null}
                                     </ButtonGroup>
                                   </td>
                                 </tr>
@@ -402,4 +410,8 @@ class FormElementsControls extends React.Component {
   }
 }
 
-export default FormElementsControls
+const mapStateProp = state => ({
+  rol: state.AuthOptions.user.rol
+})
+
+export default withRouter(connect(mapStateProp)(FormElementsControls))
