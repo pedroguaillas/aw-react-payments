@@ -6,6 +6,7 @@ import Customers from './Customers/'
 import Users from './Users'
 import Payments from './Payments'
 import Salaries from './Salaries'
+import Expenses from './Expenses'
 
 // Layout
 import AppHeader from '../../Layout/AppHeader/'
@@ -34,6 +35,7 @@ const Forms = ({ match }) => (
             path={`${match.url}/asesor/:id/salarios`}
             component={ListSalaries}
           />
+          <Route path={`${match.url}/gastos`} component={Expenses} />
         </div>
       </div>
     </div>

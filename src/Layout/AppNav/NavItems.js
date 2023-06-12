@@ -20,5 +20,10 @@ export const FormsNav = [
     icon: 'pe-7s-cash',
     label: 'Sueldos',
     to: '#/app/sueldos'
+  },
+  {
+    icon: 'pe-7s-wallet',
+    label: 'Gastos',
+    to: '#/app/gastos'
   }
 ]
