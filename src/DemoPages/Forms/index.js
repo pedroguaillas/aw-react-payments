@@ -7,12 +7,13 @@ import Users from './Users'
 import Payments from './Payments'
 import Salaries from './Salaries'
 import Expenses from './Expenses'
+import SmartPayment from './SmartPayment'
+import ListSalaries from './Salaries/ListSalaries'
+import ExpenseItems from './Expenses/ExpenseItems'
 
 // Layout
 import AppHeader from '../../Layout/AppHeader/'
 import AppSidebar from '../../Layout/AppSidebar/'
-import SmartPayment from './SmartPayment'
-import ListSalaries from './Salaries/ListSalaries'
 
 const Forms = ({ match }) => (
   <Fragment>
@@ -36,6 +37,7 @@ const Forms = ({ match }) => (
             component={ListSalaries}
           />
           <Route path={`${match.url}/gastos`} component={Expenses} />
+          <Route path={`${match.url}gasto/:id`} component={ExpenseItems} />
         </div>
       </div>
     </div>

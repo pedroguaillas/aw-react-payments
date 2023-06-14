@@ -1,7 +1,6 @@
 import { Component, Fragment } from 'react'
 import {
   Button,
-  Col,
   Form,
   FormFeedback,
   FormGroup,
@@ -25,7 +24,9 @@ class FormExpenseModal extends Component {
           className={this.props.className}
           size={this.props.size}
         >
-          <ModalHeader toggle={toggle}>Registrar gasto</ModalHeader>
+          <ModalHeader toggle={toggle}>
+            {expense.id !== undefined ? 'Editar' : 'Registrar'} gasto
+          </ModalHeader>
           <ModalBody>
             <Form className='text-right'>
               <Row form>
