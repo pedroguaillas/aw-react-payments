@@ -21,7 +21,7 @@ class ByType extends React.Component {
     }
     return (
       <div>
-        <Pie dataKey='value' data={data} />
+        <Pie data={data} />
       </div>
     )
   }

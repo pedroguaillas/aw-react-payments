@@ -348,7 +348,7 @@ class FormElementsControls extends React.Component {
                                 <tr key={index}>
                                   <td>{customer.ruc}</td>
                                   <td>{customer.atts.razonsocial}</td>
-                                  <td style={{ 'text-transform': 'uppercase' }}>
+                                  <td>
                                     {customer.atts.name}
                                   </td>
                                   {rol === 'admin' ? (

@@ -138,7 +138,6 @@ export default class AnalyticsDashboard1 extends Component {
                         >
                           <Line
                             type='monotone'
-                            dataKey='pv'
                             stroke='#3ac47d'
                             strokeWidth={3}
                           />
@@ -169,7 +168,6 @@ export default class AnalyticsDashboard1 extends Component {
                         >
                           <Area
                             type='monotoneX'
-                            dataKey='uv'
                             stroke='#fd7e14'
                             fill='#ffb87d'
                           />
@@ -196,7 +194,6 @@ export default class AnalyticsDashboard1 extends Component {
                       <ResponsiveContainer width='100%' aspect={3.0 / 1.0}>
                         <BarChart data={data}>
                           <Bar
-                            dataKey='uv'
                             fill='#81a4ff'
                             stroke='#3f6ad8'
                             strokeWidth={2}
