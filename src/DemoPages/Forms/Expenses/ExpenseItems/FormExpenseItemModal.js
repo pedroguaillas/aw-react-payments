@@ -17,7 +17,7 @@ import {
 class FormExpenseItemModal extends Component {
   render () {
     let {
-      expenseitem,
+      expenseItem,
       error,
       submit,
       handleChange,
@@ -35,7 +35,7 @@ class FormExpenseItemModal extends Component {
           size={size}
         >
           <ModalHeader toggle={toggle}>
-            {expenseitem.id === undefined ? 'Registrar' : 'Editar'} gasto
+            {expenseItem.id === undefined ? 'Registrar' : 'Editar'} gasto
           </ModalHeader>
           <ModalBody>
             <Form className='text-right'>
@@ -51,7 +51,7 @@ class FormExpenseItemModal extends Component {
                   type='month'
                   bsSize='sm'
                   onChange={handleChange}
-                  value={expenseitem.month}
+                  value={expenseItem.month}
                   name='month'
                   maxLength={10}
                   invalid={error.month !== undefined}
@@ -67,7 +67,7 @@ class FormExpenseItemModal extends Component {
                   type='number'
                   bsSize='sm'
                   onChange={handleChange}
-                  value={expenseitem.amount}
+                  value={expenseItem.amount}
                   name='amount'
                   maxLength={10}
                   invalid={error.amount !== undefined}
@@ -83,7 +83,7 @@ class FormExpenseItemModal extends Component {
                   type='select'
                   bsSize='sm'
                   onChange={handleChange}
-                  value={expenseitem.pay_method}
+                  value={expenseItem.pay_method}
                   name='pay_method'
                   invalid={error.pay_method !== undefined}
                 >

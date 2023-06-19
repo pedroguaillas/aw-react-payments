@@ -14,11 +14,11 @@ import axios from '../../../../services/api'
 import FormExpenseItemModal from './FormExpenseItemModal'
 import DialogDelete from '../../../Components/DialogDelete'
 
-class ExpenseItems extends Component {
+class expenseItems extends Component {
   state = {
     expense: {},
     expenseItems: [],
-    expenseitem: {},
+    expenseItem: {},
     error: {},
     isOpen: false,
     id_delete: 0
@@ -38,28 +38,53 @@ class ExpenseItems extends Component {
 
   handleChange = e => {
     this.setState({
-      expenseitem: {
-        ...this.state.expenseitem,
+      expenseItem: {
+        ...this.state.expenseItem,
         [e.target.name]: e.target.value
       }
     })
   }
 
   submit = async () => {
-    let { expenseitem } = this.state
+    let { expenseItem } = this.state
 
-    if (expenseitem.id === undefined) {
+    if (expenseItem.id === undefined) {
       await axios
-        .post('expenseitems', expenseitem)
+        .post('expenseitems', expenseItem)
         .then(res => {
           if (res.code === 'ERR_BAD_REQUEST') {
             this.setState({ error: res.response.data })
           } else if (res.status === 200) {
-            let { expenseitems } = this.state
-            expenseitems.push(res.data.expenseitem)
+            let { expenseItems } = this.state
+            expenseItems.push(res.data.expenseItem)
             this.setState({
-              expenseitems,
-              expenseitem: {},
+              expenseItems,
+              expenseItem: {},
+              isOpen: false,
+              error: {}
+            })
+          }
+        })
+        .catch(err => console.log(err))
+    } else {
+      await axios
+        .put(`expenseitems/${expenseItem.id}`, expenseItem)
+        .then(res => {
+          if (res.code === 'ERR_BAD_REQUEST') {
+            this.setState({ error: res.response.data })
+          } else if (res.status === 200) {
+            let { expenseItems } = this.state
+            let index = expenseItems.findIndex(exp => exp.id === expenseItem.id)
+            let { amount, month, pay_method } = res.data.expenseItem
+            expenseItems[index] = {
+              ...this.state.expenseItems[index],
+              amount,
+              month,
+              pay_method
+            }
+            this.setState({
+              expenseItems,
+              expenseItem: {},
               isOpen: false,
               error: {}
             })
@@ -69,9 +94,10 @@ class ExpenseItems extends Component {
     }
   }
 
-  newExpenseItem = () => {
+  newexpenseItem = () => {
     this.setState(state => ({
-      expenseitem: { expense_id: state.expense.id },
+      expenseItem: { expense_id: state.expense.id },
+      error: {},
       isOpen: true
     }))
   }
@@ -91,10 +117,15 @@ class ExpenseItems extends Component {
       .catch(err => console.log(err))
   }
 
+  edit = expenseItem => {
+    expenseItem.amount = parseFloat(expenseItem.amount)
+    this.setState({ expenseItem, isOpen: true })
+  }
+
   toogle = () => this.setState(state => ({ isOpen: !state.isOpen }))
 
   render () {
-    let { expense, expenseItems, expenseitem, isOpen, error, id_delete } =
+    let { expense, expenseItems, expenseItem, isOpen, error, id_delete } =
       this.state
 
     return (
@@ -103,7 +134,7 @@ class ExpenseItems extends Component {
           options={[
             {
               id: 'tooltip-add-expense-items',
-              action: this.newExpenseItem,
+              action: this.newexpenseItem,
               icon: 'plus',
               msmTooltip: 'Registrar gasto item',
               color: 'primary'
@@ -126,7 +157,7 @@ class ExpenseItems extends Component {
               <FormExpenseItemModal
                 isOpen={isOpen}
                 toggle={this.toogle}
-                expenseitem={expenseitem}
+                expenseItem={expenseItem}
                 handleChange={this.handleChange}
                 submit={this.submit}
                 error={error}
@@ -146,7 +177,7 @@ class ExpenseItems extends Component {
                             <th>Mes</th>
                             <th>Monto</th>
                             <th>Met. Pago</th>
-                            <th></th>
+                            <th style={{ width: '2em' }}></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -169,6 +200,14 @@ class ExpenseItems extends Component {
                                   >
                                     <i className='nav-link-icon lnr-trash'></i>
                                   </Button>
+                                  <Button
+                                    onClick={() => this.edit(expenseItem)}
+                                    color='primary'
+                                    title='Editar'
+                                    className='ml-2'
+                                  >
+                                    <i className='nav-link-icon lnr-pencil'></i>
+                                  </Button>
                                 </ButtonGroup>
                               </td>
                             </tr>
@@ -186,4 +225,4 @@ class ExpenseItems extends Component {
     )
   }
 }
-export default ExpenseItems
+export default expenseItems
