@@ -1,15 +1,6 @@
 import React, { Component, Fragment } from 'react'
 import { CSSTransition, TransitionGroup } from 'react-transition-group'
-import {
-  Row,
-  Col,
-  Card,
-  CardBody,
-  CardTitle,
-  ListGroup,
-  ListGroupItem,
-  ListGroupItemText
-} from 'reactstrap'
+import { Row, Col, Card, CardBody, CardTitle } from 'reactstrap'
 
 import PageTitle from '../../../Layout/AppMain/PageTitle'
 
@@ -33,7 +24,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import ByMonth from './ByMonth'
 import ByType from './ByType'
-import ByRangePay from './ByRangePay'
 
 import api from '../../../services/api'
 
@@ -214,65 +204,8 @@ export default class AnalyticsDashboard1 extends Component {
                     <Col lg={12}>
                       <Card className='main-card mb-3'>
                         <CardBody>
-                          <CardTitle>Reporte mensual 2022</CardTitle>
+                          <CardTitle>Reporte mensual 2023</CardTitle>
                           <ByMonth payment_months={payment_months} />
-                        </CardBody>
-                      </Card>
-                    </Col>
-                    <Col lg={12}>
-                      <Card className='main-card mb-3'>
-                        <CardBody>
-                          <CardTitle>Resumen economico mensual</CardTitle>
-                          <ListGroup>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                <strong>DETALLE</strong>
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                <strong>MONTO</strong>
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                Ingresos de la empresa
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                32,948.81
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                Incobrables
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                21,540.00
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                Total sueldos
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                21,540.00
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                Total gastos
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                6,537.00
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                            <ListGroupItem className='d-flex justify-content-between'>
-                              <ListGroupItemText className='mb-0'>
-                                Total sobrante
-                              </ListGroupItemText>
-                              <ListGroupItemText className='mb-0'>
-                                1,576.93
-                              </ListGroupItemText>
-                            </ListGroupItem>
-                          </ListGroup>
                         </CardBody>
                       </Card>
                     </Col>

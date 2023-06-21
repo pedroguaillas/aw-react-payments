@@ -62,7 +62,7 @@ class SalaryItems extends React.Component {
                       +
                     </Button>
                     <Button
-                      title='Agregar anticipo de pago acticipo'
+                      title='Agregar anticipo de pago cliente'
                       onClick={e => addSalaryAdvanceofpay()}
                       className='btn btn-success'
                     >

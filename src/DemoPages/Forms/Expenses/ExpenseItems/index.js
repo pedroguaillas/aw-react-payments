@@ -96,7 +96,10 @@ class expenseItems extends Component {
 
   newexpenseItem = () => {
     this.setState(state => ({
-      expenseItem: { expense_id: state.expense.id },
+      expenseItem: {
+        expense_id: state.expense.id,
+        amount: parseFloat(state.expense.amount)
+      },
       error: {},
       isOpen: true
     }))
