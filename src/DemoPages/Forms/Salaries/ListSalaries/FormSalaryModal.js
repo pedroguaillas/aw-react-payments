@@ -143,6 +143,20 @@ class FormSalaryModal extends Component {
                   />
                 </Col>
               </FormGroup>
+              <FormGroup className='mb-1' row>
+                <Label sm={2} for='date'>
+                  Fecha
+                </Label>
+                <Col sm={6}>
+                  <Input
+                    type='date'
+                    onChange={onChange}
+                    bsSize='sm'
+                    name='date'
+                    value={salary.date}
+                  />
+                </Col>
+              </FormGroup>
             </Form>
           </ModalBody>
           <ModalFooter>

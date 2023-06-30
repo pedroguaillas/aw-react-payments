@@ -24,6 +24,7 @@ class SalaryItems extends React.Component {
       changeSalaryAdvanceAmount,
       checkAdvance,
       selectPay,
+      changeSalaryAdvanceOfPay,
       changeSalaryAdvanceAmountOfPay,
       checkAdvanceofpays,
       deletesalaryadvance,
@@ -76,13 +77,13 @@ class SalaryItems extends React.Component {
               <Table className='text-center' size='sm' bordered responsive>
                 <thead>
                   <tr>
-                    <th colSpan={2}>SUELDO</th>
+                    <th colSpan={3}>SUELDO</th>
                     <th style={{ 'text-align': 'right' }}>{amount}</th>
                     <th></th>
                   </tr>
                   {balance > 0 ? (
                     <tr>
-                      <td colSpan={2}>Saldo mes anterior</td>
+                      <td colSpan={3}>Saldo mes anterior</td>
                       <td style={{ 'text-align': 'right' }}>{balance}</td>
                       <th></th>
                     </tr>
@@ -92,7 +93,8 @@ class SalaryItems extends React.Component {
                     <tr>
                       <th>+</th>
                       <th>Anticipo</th>
-                      <th>Monto</th>
+                      <th style={{ width: '10em' }}>Fecha</th>
+                      <th style={{ width: '5em' }}>Monto</th>
                       <th style={{ width: '3em' }}></th>
                     </tr>
                   ) : null}
@@ -118,6 +120,20 @@ class SalaryItems extends React.Component {
                               salaryadvanceofpays={salaryadvanceofpays}
                             />
                           </td>
+                          {/* Para fecha */}
+                          <td>
+                            {salaryadvanceofpay.edit === undefined ||
+                            salaryadvanceofpay.edit ? (
+                              salaryadvanceofpay.date
+                            ) : (
+                              <Input
+                                type='date'
+                                name='date'
+                                onChange={changeSalaryAdvanceOfPay(index)}
+                                value={salaryadvanceofpay.date}
+                              />
+                            )}
+                          </td>
                           <td style={{ 'text-align': 'right' }}>
                             {salaryadvanceofpay.edit === undefined ||
                             salaryadvanceofpay.edit ? (
@@ -127,7 +143,7 @@ class SalaryItems extends React.Component {
                                 name='amount'
                                 onChange={changeSalaryAdvanceAmountOfPay(index)}
                                 value={salaryadvanceofpay.amount}
-                                style={{ width: '6em', 'text-align': 'right' }}
+                                style={{ 'text-align': 'right' }}
                               />
                             )}
                           </td>
@@ -179,6 +195,20 @@ class SalaryItems extends React.Component {
                               />
                             )}
                           </td>
+                          {/* Para fecha */}
+                          <td>
+                            {salaryadvance.edit === undefined ||
+                            salaryadvance.edit ? (
+                              salaryadvance.date
+                            ) : (
+                              <Input
+                                type='date'
+                                name='date'
+                                onChange={changeSalaryAdvance(index)}
+                                value={salaryadvance.date}
+                              />
+                            )}
+                          </td>
                           <td style={{ 'text-align': 'right' }}>
                             {salaryadvance.edit === undefined ||
                             salaryadvance.edit ? (
@@ -188,15 +218,16 @@ class SalaryItems extends React.Component {
                                 name='amount'
                                 onChange={changeSalaryAdvanceAmount(index)}
                                 value={salaryadvance.amount}
-                                style={{ width: '6em', 'text-align': 'right' }}
+                                style={{ 'text-align': 'right' }}
                               />
                             )}
                           </td>
                           <td className='text-center'>
                             <ButtonGroup size='sm'>
                               <input
-                                id={`checkbox${salaryadvanceofpays.length +
-                                  index}`}
+                                id={`checkbox${
+                                  salaryadvanceofpays.length + index
+                                }`}
                                 name='edit'
                                 type='checkbox'
                                 className='custom-control-input me-2'
@@ -226,7 +257,7 @@ class SalaryItems extends React.Component {
                   {/* Mostrar el total del anticipo si es mayor a CERO */}
                   {sum_salary_advance > 0 ? (
                     <tr className='text-center'>
-                      <th colSpan={2}>Total anticipo</th>
+                      <th colSpan={3}>Total anticipo</th>
                       <th style={{ 'text-align': 'right' }}>
                         {sum_salary_advance.toFixed(2)}
                       </th>
@@ -254,7 +285,7 @@ class SalaryItems extends React.Component {
                   {amount >
                   sum_salary_advance + balance + amount_cheque + cash ? (
                     <tr className='text-center'>
-                      <td colSpan={2}>
+                      <td colSpan={3}>
                         <Button
                           onClick={completePay}
                           className='font-icon-sm py-0'

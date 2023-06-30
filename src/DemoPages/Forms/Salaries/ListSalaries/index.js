@@ -108,7 +108,8 @@ class ListSalaries extends React.Component {
       user_id: user.id,
       balance: '',
       cheque: '',
-      paid: 0
+      paid: 0,
+      date: new Date().toISOString().substring(0, 10)
     }
     this.setState({
       salary,
@@ -248,7 +249,12 @@ class ListSalaries extends React.Component {
   addSalaryAdvance = () => {
     if (this.enableAdvance()) {
       let { salaryadvances } = this.state
-      salaryadvances.push({ description: '', amount: '', edit: false })
+      salaryadvances.push({
+        description: '',
+        amount: '',
+        date: new Date().toISOString().substring(0, 10),
+        edit: false
+      })
       this.setState({ salaryadvances })
     }
   }
@@ -367,7 +373,7 @@ class ListSalaries extends React.Component {
       return
     }
 
-    if (amount.trim().length === 0) {
+    if (('' + amount).trim().length === 0) {
       alert('Agregue el monto al anticipo')
       return
     }
@@ -420,6 +426,7 @@ class ListSalaries extends React.Component {
         salary_id: 0,
         payment_id: 0,
         amount: '',
+        date: new Date().toISOString().substring(0, 10),
         edit: false
       })
       this.setState({ salaryadvanceofpays })
@@ -445,6 +452,12 @@ class ListSalaries extends React.Component {
     this.setState({ salaryadvanceofpays })
 
     return true
+  }
+  changeSalaryAdvanceOfPay = index => e => {
+    let { name, value } = e.target
+    let { salaryadvanceofpays } = this.state
+    salaryadvanceofpays[index][name] = value
+    this.setState({ salaryadvanceofpays })
   }
 
   changeSalaryAdvanceAmountOfPay = index => e => {
@@ -764,6 +777,7 @@ class ListSalaries extends React.Component {
                   changeSalaryAdvanceAmount={this.changeSalaryAdvanceAmount}
                   checkAdvance={this.checkAdvance}
                   selectPay={this.selectPay}
+                  changeSalaryAdvanceOfPay={this.changeSalaryAdvanceOfPay}
                   changeSalaryAdvanceAmountOfPay={
                     this.changeSalaryAdvanceAmountOfPay
                   }

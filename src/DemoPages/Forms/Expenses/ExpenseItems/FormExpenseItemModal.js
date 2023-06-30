@@ -1,6 +1,5 @@
 import { Component } from 'react'
 import { Fragment } from 'react'
-import { ModalTitle } from 'react-bootstrap'
 import {
   Button,
   Form,
@@ -93,6 +92,21 @@ class FormExpenseItemModal extends Component {
                 </Input>
                 <FormFeedback invalid>
                   {error.pay_method !== undefined ? error.pay_method[0] : null}
+                </FormFeedback>
+              </FormGroup>
+
+              <FormGroup>
+                <Label for='date'>Fecha de pago</Label>
+                <Input
+                  type='date'
+                  bsSize='sm'
+                  onChange={handleChange}
+                  value={expenseItem.date}
+                  name='date'
+                  invalid={error.date !== undefined}
+                />
+                <FormFeedback invalid>
+                  {error.date !== undefined ? error.date[0] : null}
                 </FormFeedback>
               </FormGroup>
             </Form>
